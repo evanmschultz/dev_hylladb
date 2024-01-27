@@ -1,15 +1,23 @@
 from hylladb.hyql import (
+    Build,
     Write,
     Checkout,
     Revise,
     Remove,
+    LogicOperators,
 )
-from hylladb.hyql.hyql import LogicOperators
+
 
 from rich import print
 
 
-checkout_idea = {
+build_idea: dict = {
+    "path": "path1.sub_path1",
+    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
+}
+
+
+checkout_idea: dict = {
     "checkout": [
         {
             "path": "path1.sub_path1",
@@ -25,7 +33,7 @@ checkout_idea = {
             "condition": {
                 "left": "path1.field1",
                 "operator": ">=",
-                "right": "value1",
+                "right": 1,
             }
         },
         "AND",
@@ -33,9 +41,11 @@ checkout_idea = {
             "group": [
                 {
                     "condition": {
-                        "left": "path1.field2",
-                        "operator": LogicOperators.GREATER_THAN,
-                        "right": 100,
+                        "left": "name",
+                        "operator": LogicOperators.IN,
+                        "right": "path1.field2",
+                        "left_is_path": False,
+                        "right_is_path": True,
                     }
                 },
                 "OR",
@@ -50,17 +60,17 @@ checkout_idea = {
             ]
         },
     ],
-    "sort": [{"path": "path1.field1", "order": "asc"}],
+    "sort": [{"path": "path1.field1"}],
     "limit": 10,
     "offset": 0,
 }
 
-write_idea = {
+write_idea: dict = {
     "path": "path1.sub_path1",
     "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
 }
 
-revise_idea = {
+revise_idea: dict = {
     "path": "path1.sub_path1",
     "filters": [
         {
@@ -95,7 +105,7 @@ revise_idea = {
     "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
 }
 
-remove_idea = {
+remove_idea: dict = {
     "path": "path1.sub_path1",
     "filters": [
         {
@@ -129,6 +139,7 @@ remove_idea = {
     ],
 }
 
+print(Build(**build_idea))
 print(Checkout(**checkout_idea))
 print(Write(**write_idea))
 print(Revise(**revise_idea))
