@@ -1,8 +1,6 @@
 from hylladb.hyql.hyql import (
-    HyWrite,
-    HyCheckout,
-    HyRevise,
-    HyRemove,
-    FilterConditions,
-    SortCondition,
+    Write,
+    Checkout,
+    Revise,
+    Remove,
 )

@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from hylladb.db.path_map import PathMap
 import hylladb.utilities.hylla_utilities as hylla_utils
 
 # BokKās or BokHylla or BokSkåp, or Skåp, Kās, or Hylla
@@ -27,6 +28,8 @@ class HyllaDB(BaseModel):
         self.library_path.mkdir(parents=True, exist_ok=True)
         self.shelf_locks: dict = {}  # Dictionary to store locks for each shelf
         self.executor = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
+
+        # TODO: Convert to a PathMap
         self.paths: set[Path] = set()
 
         if self.section_path_strs:
