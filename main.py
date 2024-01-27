@@ -4,7 +4,7 @@ from hylladb.hyql import (
     Checkout,
     Revise,
     Remove,
-    LogicOperators,
+    Operators,
 )
 
 
@@ -42,7 +42,7 @@ checkout_idea: dict = {
                 {
                     "condition": {
                         "left": "name",
-                        "operator": LogicOperators.IN,
+                        "operator": Operators.IN,
                         "right": "path1.field2",
                         "left_is_path": False,
                         "right_is_path": True,

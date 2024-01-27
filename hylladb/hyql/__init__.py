@@ -4,5 +4,14 @@ from hylladb.hyql.hyql import (
     Checkout,
     Revise,
     Remove,
-    LogicOperators,
+)
+from hylladb.hyql.enums import (
+    Operators,
+    BasicComparisonOperators,
+    StringOperators,
+    CollectionOperators,
+    LogicalOperators,
+    IdentityOperators,
+    NumericOperators,
+    DateTimeOperators,
 )
