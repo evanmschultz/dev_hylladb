@@ -1,7 +1,7 @@
 from hylladb.hyql.hyql import (
     Build,
     Write,
-    Checkout,
+    CheckOut,
     Revise,
     Remove,
 )

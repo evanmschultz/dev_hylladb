@@ -1,7 +1,7 @@
 from hylladb.hyql import (
     Build,
     Write,
-    Checkout,
+    CheckOut,
     Revise,
     Remove,
     Operators,
@@ -140,7 +140,7 @@ remove_idea: dict = {
 }
 
 print(Build(**build_idea))
-print(Checkout(**checkout_idea))
+print(CheckOut(**checkout_idea))
 print(Write(**write_idea))
 print(Revise(**revise_idea))
 print(Remove(**remove_idea))
