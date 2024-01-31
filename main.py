@@ -1,5 +1,6 @@
+from hylladb.db.models import ShelfModel
 from hylladb.hyql import (
-    Build,
+    BuildShelf,
     Write,
     CheckOut,
     Revise,
@@ -10,9 +11,22 @@ from hylladb.hyql import (
 
 from rich import print
 
+from hylladb.hyql.hyql import SetSchema
 
-build_idea: dict = {
+
+class AnimalSchema(ShelfModel):
+    name: str
+
+
+set_schema_idea: dict = {
     "path": "path1.sub_path1",
+    "schema": AnimalSchema,
+}
+
+
+build_shelf_idea: dict = {
+    "path": "path1.sub_path1",
+    "name": "name1",
     "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
 }
 
@@ -20,11 +34,11 @@ build_idea: dict = {
 checkout_idea: dict = {
     "checkout": [
         {
-            "path": "path1.sub_path1",
-            "checkout": ["sub_path1.field1", "sub_path1.field2"],
+            "path": "section_1.sub_section_1",
+            "checkout": ["shelf_1.field1", "shelf_1.field2"],
         },
         {
-            "path": "path2",
+            "path": "section_2",
             "checkout": ["*all"],
         },
     ],
@@ -139,7 +153,8 @@ remove_idea: dict = {
     ],
 }
 
-print(Build(**build_idea))
+print(SetSchema(**set_schema_idea))
+print(BuildShelf(**build_shelf_idea))
 print(CheckOut(**checkout_idea))
 print(Write(**write_idea))
 print(Revise(**revise_idea))

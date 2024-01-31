@@ -1,5 +1,5 @@
 from hylladb.hyql.hyql import (
-    Build,
+    BuildShelf,
     Write,
     CheckOut,
     Revise,

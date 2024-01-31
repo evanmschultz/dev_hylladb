@@ -8,38 +8,12 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from hylladb.db.models import ShelfModel
 from hylladb.hyql.enums import Operators
+import hylladb.hyql.hyql_utilities as hyql_utils
 
 
-path_dict: dict = {
-    "pattern": r"^[A-Za-z0-9]+(?:[._][A-Za-z0-9]+)*$",
-    "description": "HyQL path: a dot separated path the dictionary key, shelf, or section, eg. 'section.shelf.dict_key'",
-}
-
-
-def _operator_validator(value: str) -> str:
-    """
-    Validates if a given string is a valid operator in HyQL based on the members of the Operators Enum.
-
-    Args:
-        `value` (str): The string to be checked.
-
-    Returns:
-        `str`: The string if it is a valid operator.
-
-    Raises:
-        `ValueError`: If the string is not a valid operator.
-    """
-    if not Operators.is_valid_operator(value):
-        raise ValueError(
-            "\n    HyllaDB Error:\n"
-            "        ---->"
-            f"Invalid operator '{value}'. Allowed operators: {', '.join(op.value for op in Operators)}\n"
-        )
-    return value
-
-
-class HyQLBaseModel(BaseModel):
+class HyQLBaseModel(BaseModel, validate_assignment=True):
     """
     A base model for HyQL models.
 
@@ -58,17 +32,17 @@ class Condition(HyQLBaseModel):
     Similarly, if the right operand is a path to a dictionary key, shelf, or section, the `right_is_path` flag must be set to True.
 
     Attributes:
-        `left` (str): The left operand of the condition, which can be a value or a path to a dictionary key, shelf, or section.
-        `operator` (str): The operator used to compare the left and right operands.
-        `right` (Any): The right operand of the condition, which can be a value or a path to a dictionary key, shelf, or section.
-        `left_is_path` (bool): A flag that indicates if the left operand is a path to a dictionary key, shelf, or section. Defaults to `True`.
-        `right_is_path` (bool): A flag that indicates if the right operand is a path to a dictionary key, shelf, or section. Defaults to `False`.
+        - `left` (str): The left operand of the condition, which can be a value or a path to a dictionary key, shelf, or section.
+        - `operator` (str): The operator used to compare the left and right operands.
+        - `right` (Any): The right operand of the condition, which can be a value or a path to a dictionary key, shelf, or section.
+        - `left_is_path` (bool): A flag that indicates if the left operand is a path to a dictionary key, shelf, or section. Defaults to `True`.
+        - `right_is_path` (bool): A flag that indicates if the right operand is a path to a dictionary key, shelf, or section. Defaults to `False`.
 
 
     Raises:
-        `ValueError`: If the operator is not a valid operator in HyQL.
-        `ValueError`: If the `left_is_path` flag is set to True but the `left` value is not a valid path string.
-        `ValueError`: If the `right_is_path` flag is set to True but the `right` value is not a valid path string.
+        - `ValueError`: If the operator is not a valid operator in HyQL.
+        - `ValueError`: If the `left_is_path` flag is set to True but the `left` value is not a valid path string.
+        - `ValueError`: If the `right_is_path` flag is set to True but the `right` value is not a valid path string.
 
     Examples:
         ```Python
@@ -97,7 +71,8 @@ class Condition(HyQLBaseModel):
 
     @field_validator("operator", mode="before")
     def _validate_operator(cls, value) -> str:
-        if not _operator_validator(value):
+        """Validates the operator."""
+        if not hyql_utils.operator_validator(value):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
@@ -106,8 +81,19 @@ class Condition(HyQLBaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_right(cls, data) -> Any:
-        pattern: LiteralString = path_dict["pattern"]
+    def _validate_paths(cls, data) -> Any:
+        """Validates the paths.
+
+        Either `left`, `right`, or both must be a valid path strings and the `is_path_*` flags must match.
+        """
+        pattern: LiteralString = hyql_utils.path_dict["pattern"]
+        if not data.right_is_path and not data.left_is_path:
+            raise ValueError(
+                "\n    HyllaDB Error:\n"
+                "        ---->"
+                f"Invalid condition format. At least one `is_path_*` boolean flag must be set to `True.\n"
+            )
+
         if data.left_is_path:
             if not isinstance(data.left, str) or not re.match(pattern, str(data.left)):
                 raise ValueError(
@@ -134,7 +120,7 @@ class ConditionDict(HyQLBaseModel):
     ConditionDict is a model for a single condition in a HyQL query.
 
     Attributes:
-        `condition` (Condition): The condition object.
+        - `condition` (Condition): The condition object.
 
     Examples:
         ```Python
@@ -168,7 +154,7 @@ class Group(HyQLBaseModel):
     logical operators "AND" | "OR".
 
     Attributes:
-        `group` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
+        - `group` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
 
     Examples:
         ```Python
@@ -199,6 +185,8 @@ class Group(HyQLBaseModel):
 
     @field_validator("group")
     def _validate_group_format(cls, value) -> list[Union[ConditionDict, "Group", str]]:
+        """Validates the format of the group list."""
+
         if not isinstance(value, list):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
@@ -250,66 +238,44 @@ class CheckOutItem(HyQLBaseModel):
     A model for a single checkout item in a HyQL query.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
-            eg. `section.shelf_1.key_1`.
-        `checkout` (list[str] | list[Literal['*all']]): A list of fields to be checked out.
+        - `path` (str | None): The path to the shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1`.
+            - If `None`, checkout is for the library directory.
+        - `checkout` (list[str] | list[Literal['*all']]): A list of paths, keys, sections, or shelves to be checked out.
+
 
     Raises:
-        `ValueError`: If `checkout` is not a list.
-        `ValueError`: If `checkout` is an empty list.
-        `ValueError`: If `checkout` contains an item that is not a string.
-        `ValueError`: If `checkout` contains an item that is not a valid path string.
-        `ValueError`: If `checkout` contains more than one item and one of the items is '*all'.
+        - `ValueError`: If `checkout` is not a list.
+        - `ValueError`: If `checkout` is an empty list.
+        - `ValueError`: If `checkout` contains an item that is not a string.
+        - `ValueError`: If `checkout` contains an item that is not a valid path string.
+        - `ValueError`: If `checkout` contains more than one item and one of the items is '*all'.
 
     Examples:
         ```Python
         # Example checkout query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
-        hylladb_checkout: dict = {
-            "checkout": [
-                {
-                    "path": "path1.sub_path1",
-                    "checkout": ["sub_path1.field1", "sub_path1.field2"],
-                },
-                {
-                    "path": "path2",
-                    "checkout": ["*all"],
-                },
-            ],
-            "filters": [
-                {
-                    "condition": {
-                        "left": "path1.field1",
-                        "operator": ">=",
-                        "right": 1,
-
-                    }
-                },
-            ],
-            "sort": [{"path": "path1.field1"}],
-            "limit": 10,
-            "offset": 0,
-        }
+        checkout_item: dict = {
+                "path": "section_1.sub_section_1",
+                "checkout": ["shelf_1.field1", "shelf_1.field2"],
+            },
 
         # Instantiate the model by unpacking the dict.
-        checkout = Checkout(**hylladb_checkout)
+        checkout = Checkout(**checkout_item)
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str | None = Field(**hyql_utils.path_dict)
+    # shelf_name: str | None = Field(None, pattern=hyql_utils.checkout_pattern)
     checkout: list[str] | list[Literal["*all"]] = Field(
         ["*all"],
-        description="A list of fields to be checked out. If the list contains only '*all', all fields will be checked out.",
+        description="A list of keys to be checked out. If the list contains only '*all', all keys will be checked out.",
     )
 
     @field_validator("checkout")
-    def _validate_checkout_format(cls, value) -> list[str]:
-        if not isinstance(value, list):
-            raise ValueError(
-                "\n    HyllaDB Error:\n"
-                "        ---->"
-                f"The value of a checkout item must be a list of fields to be checked out. Example format: ['field1', 'field2']\n"
-            )
+    def _validate_checkout_format(cls, value: list[str]) -> list[str]:
+        """Validates the format of the checkout list."""
+
         if len(value) == 0:
             raise ValueError(
                 "\n    HyllaDB Error:\n"
@@ -318,12 +284,6 @@ class CheckOutItem(HyQLBaseModel):
             )
 
         for i, item in enumerate(value):
-            if not isinstance(item, str):
-                raise ValueError(
-                    "\n    HyllaDB Error:\n"
-                    "        ---->"
-                    f"Invalid item type at position {i}. Expected str.\n"
-                )
             if item == "*all":
                 if len(value) > 1:
                     raise ValueError(
@@ -332,13 +292,24 @@ class CheckOutItem(HyQLBaseModel):
                         f"Invalid item type at position {i}. '*all' must be the only item in the list.\n"
                     )
             else:
-                if not re.match(path_dict["pattern"], item):
+                if not re.match(hyql_utils.path_pattern, item):
                     raise ValueError(
                         "\n    HyllaDB Error:\n"
                         "        ---->"
-                        f"Invalid item type at position {i}. Expected a valid path string, eg. eg. `section.shelf_1.key_1`.\n"
+                        f"Invalid item type at position {i}. Expected a valid path string, eg. eg. `key_1`.\n"
                     )
         return value
+
+    # @model_validator(mode="after")
+    # def _validate_if_shelf_name_checkout_all(self) -> "CheckOutItem":
+    #     if not self.shelf_name:
+    #         if len(self.checkout) > 1 or self.checkout[0] != "*all":
+    #             raise ValueError(
+    #                 "\n    HyllaDB Error:\n"
+    #                 "        ---->"
+    #                 f"Invalid checkout format. If the checkout item is for a section or the library, the checkout list must contain only '*all'.\n"
+    #             )
+    #     return self
 
 
 class SortItem(HyQLBaseModel):
@@ -346,12 +317,12 @@ class SortItem(HyQLBaseModel):
     A model for a single sort item in a HyQL query.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
-        `order` (str): The sort order, either 'asc' for ascending or 'desc' for descending.
+        - `order` (str): The sort order, either 'asc' for ascending or 'desc' for descending.
 
     Raises:
-        `ValueError`: If `order` is not 'asc' or 'desc'.
+        - `ValueError`: If `order` is not 'asc' or 'desc'.
 
     Examples:
         ```Python
@@ -376,23 +347,103 @@ class SortItem(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
     order: str = Field("asc", pattern=r"^(asc|desc)$")
 
 
-class Build(HyQLBaseModel):
+class SetSchema(HyQLBaseModel):
     """
-    A model for a build query in HyQL.
+    Sets or updates the schema for a section or the library.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
-            eg. `section.shelf_1.key_1`.
-        `data` (dict[str, Any] | None): The data to be written to the path. If `is_section` is True, data must be `None`.
-        `metadata` (dict[str, Any] | None): The metadata to be written to the path.
-        `is_section` (bool): A flag that indicates if the path is a section. Defaults to `False`.
+        - `path` (str | None): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1.key_1`. If `None`, the schema will be set for the library.
+        - `schema` (type[ShelfModel] | None): The schema for the section or library. Used to enforce data structure and types for all the `shelves` that are direct children
+            of the section or library directory. If `None`, no shelf can be created as a direct child of the section or library directory.
+            - NOTE: This is not an instance of the schema class, but the class itself.
+        - `is_library` (bool): A flag that indicates if the schema is for the library. Defaults to `False`.
 
     Raises:
-        `ValueError`: If `is_section` is True but `data` is not None.
+        - `ValueError`: If `path` is not `None` and `is_library` is `True`.
+        - `ValueError`: If `path` is `None` and `is_library` is `False`.
+
+    Examples:
+        - Define a simple flat schema for a section:
+
+        ```Python
+        from hylladb.hyql import SetSchema
+        from hylladb.hyql import HyQLSchema
+
+        # Define the schema for the shelves that are direct children to the section.
+        class Animal(HyQLSchema):
+            name: str
+
+        # Example set schema query. Can be done by instantiating the model directly or
+        # by unpacking a dict to the model.
+        hylladb_set_schema: dict = {
+            "path": "path1.sub_path1",
+            "schema": Animal,
+        }
+
+        # Instantiate the model by unpacking the dict.
+        set_schema = SetSchema(**hylladb_set_schema)
+
+        # Pass it into the HyQL query method.
+        ```
+
+        - Define a more complex, nested schema for the library:
+
+        ```Python
+        from hylladb.hyql import SetSchema
+        from hylladb.hyql import ShelfModel
+
+        # Define the schema for the shelves that are direct children to the library.
+        class UserStats(ShelfModel):
+            age: int
+            height: float
+
+        class User(ShelfModel):
+            name: str
+            stats: UserStats
+
+        # Example set schema query. Can be done by instantiating the model directly or
+        # by unpacking a dict to the model.
+        hylladb_set_schema: dict = {
+            "schema": User,
+            "is_library": True,
+        }
+
+        # Instantiate the model by unpacking the dict.
+        set_schema = SetSchema(**hylladb_set_schema)
+        ```
+    """
+
+    path: str | None = Field(**hyql_utils.path_dict)
+    schema: type[ShelfModel] | None
+    is_library: bool = False
+
+    @model_validator(mode="after")
+    def _ensure_path_is_none_if_is_library(cls, data) -> Any:
+        """Ensures that the path is None if the schema is for a library."""
+
+        if data.is_library and data.path:
+            raise ValueError(
+                "\n    HyllaDB Error:\n"
+                "        ---->"
+                f"The `path` field must be None if `is_library` is True.\n"
+            )
+
+
+class BuildShelf(HyQLBaseModel):
+    """
+    A HyQL model used when building a shelf in HyllaDB.
+
+    Attributes:
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1.key_1`.
+        - `name` (str): The name of the shelf. Must follow the same naming conventions as a Python variable name, eg. `shelf_1`.
+        - `data` (dict[str, Any] | None): The data to be written to the path. If passing in data must conform to the `schema` defined in the section.
+        - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
 
     Examples:
         ```Python
@@ -412,9 +463,29 @@ class Build(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
+    name: str = Field(pattern=r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$")
+    data: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = None
-    is_section: bool = False
+
+
+class BuildSection(HyQLBaseModel):
+    """
+    A HyQL model used when building a section in HyllaDB.
+
+    Attributes:
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1.key_1`.
+        - `name` (str): The name of the section. Must follow the same naming conventions as a Python variable name, eg. `section_1`.
+        - `schema` (Schema | None): The schema for the section. Used to enforce data structure and types for all the `shelves` that are direct children
+            of the section. If `None`, no shelf can be created as a direct child of the section.
+        - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
+    """
+
+    path: str = Field(**hyql_utils.path_dict)
+    name: str = Field(pattern=r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$")
+    schema: ShelfModel | None
+    metadata: dict[str, Any] | None = None
 
 
 class Write(HyQLBaseModel):
@@ -422,9 +493,9 @@ class Write(HyQLBaseModel):
     A model for a single write item in a HyQL query.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
-        `data` (dict[str, Any]): The data to be written to the path.
+        - `data` (dict[str, Any]): The data to be written to the path.
 
     Examples:
         ```Python
@@ -444,7 +515,7 @@ class Write(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
     data: dict[str, Any]
 
 
@@ -453,15 +524,15 @@ class CheckOut(HyQLBaseModel):
     A model for a checkout query in HyQL.
 
     Attributes:
-        `checkout` (list[CheckoutItem]): A list of checkout items.
-        `filters` (list[ConditionDict | Group | str] | None): A list of conditions, groups, or logical operators.
-        `sort` (list[SortItem] | None): A list of sort items.
-        `limit` (int | None): The maximum number of results to return.
-        `offset` (int | None): The number of results to skip.
+        - `checkout` (list[CheckoutItem]): A list of checkout items.
+        - `filters` (list[ConditionDict | Group | str] | None): A list of conditions, groups, or logical operators.
+        - `sort` (list[SortItem] | None): A list of sort items.
+        - `limit` (int | None): The maximum number of results to return.
+        - `offset` (int | None): The number of results to skip.
 
     Raises:
-        `ValueError`: If `limit` is less than 1.
-        `ValueError`: If `offset` is less than 0.
+        - `ValueError`: If `limit` is less than 1.
+        - `ValueError`: If `offset` is less than 0.
 
     Examples:
        ```Python
@@ -473,18 +544,18 @@ class CheckOut(HyQLBaseModel):
         hylladb_checkout: dict = {
         "checkout": [
             {
-                "path": "path1.sub_path1",
-                "checkout": ["sub_path1.field1", "sub_path1.field2"],
+                "path": "section_1.sub_section_1",
+                "checkout": ["shelf_1.field1", "shelf_1.field2"],
             },
             {
-                "path": "path2",
+                "path": "section_2",
                 "checkout": ["*all"],
             },
         ],
         "filters": [
             {
                 "condition": {
-                    "left": "path1.field1",
+                    "left": "section_1.sub_section_1.shelf_1.field1",
                     "operator": ">=",
                     "right": 1,
                 }
@@ -496,7 +567,7 @@ class CheckOut(HyQLBaseModel):
                         "condition": {
                             "left": "name",
                             "operator": Operators.IN,
-                            "right": "path1.field2",
+                            "right": "section_1.sub_section_1.shelf_1.field2",
                             "left_is_path": False,
                             "right_is_path": True,
                         }
@@ -504,16 +575,16 @@ class CheckOut(HyQLBaseModel):
                     "OR",
                     {
                         "condition": {
-                            "left": "path2.field3",
+                            "left": "section_2.shelf_1.field3",
                             "operator": "<",
-                            "right": "path1.field2",
+                            "right": "section_1.sub_section_1.shelf_1.field2",
                             "right_is_path": True,
                         }
                     },
                 ]
             },
         ],
-        "sort": [{"path": "path1.field1"}],
+        "sort": [{"path": "section_1.field1"}],
         "limit": 10,
         "offset": 0,
     }
@@ -535,13 +606,13 @@ class Revise(HyQLBaseModel):
     A model for a revise query in HyQL.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
-        `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
-        `data` (dict[str, Any]): The data to be written to the path.
+        - `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
+        - `data` (dict[str, Any]): The data to be written to the path.
 
     Raises:
-        `ValueError`: If the path is the `metadata` and the `schema` key is missing from the `data` dictionary.
+        - `ValueError`: If the path is the `metadata` and the `schema` key is missing from the `data` dictionary.
 
     Examples:
         ```Python
@@ -590,28 +661,9 @@ class Revise(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
     filters: list[ConditionDict | Group | str] | None = None
     data: dict[str, Any]
-
-    @model_validator(mode="after")
-    def _validate_dict(cls, data) -> Any:
-        if len(data.data) == 0:
-            raise ValueError(
-                "\n    HyllaDB Error:\n"
-                "        ---->"
-                f"The `data` field cannot be empty.\n"
-            )
-
-    @model_validator(mode="after")
-    def _validate_path_is_metadata(cls, data) -> Any:
-        if data.path.endswith("metadata"):
-            if not data.data.get("schema"):
-                raise ValueError(
-                    "\n    HyllaDB Error:\n"
-                    "        ---->"
-                    f"The `schema` field is required when revising metadata.\n"
-                )
 
 
 class Remove(HyQLBaseModel):
@@ -619,14 +671,14 @@ class Remove(HyQLBaseModel):
     A model for a remove query in HyQL.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
-        `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
-        `remove_shelf` (bool): A flag that indicates if the shelf should be removed. Defaults to `False`.
-        `remove_section` (bool): A flag that indicates if the section should be removed. Defaults to `False`.
+        - `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
+        - `remove_shelf` (bool): A flag that indicates if the shelf should be removed. Defaults to `False`.
+        - `remove_section` (bool): A flag that indicates if the section should be removed. Defaults to `False`.
 
     Raises:
-        `ValueError`: If `remove_shelf` and `remove_section` are both `True`. Only one of them can be `True` per query.
+        - `ValueError`: If `remove_shelf` and `remove_section` are both `True`. Only one of them can be `True` per query.
 
     Examples:
         ```Python
@@ -672,7 +724,7 @@ class Remove(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
     filters: list[ConditionDict | Group | str] | None = None
     remove_shelf: bool = False
     remove_section: bool = False
@@ -694,17 +746,17 @@ class Reset(HyQLBaseModel):
     This will remove all of the data in the shelf or section, but will not remove the shelf or section itself.
 
     Attributes:
-        `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
-        `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
-        `reset_shelf` (bool): A flag that indicates if the shelf should be reset. Defaults to `False`.
-        `reset_section` (bool): A flag that indicates if the section should be reset. Defaults to `False`.
+        - `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
+        - `reset_shelf` (bool): A flag that indicates if the shelf should be reset. Defaults to `False`.
+        - `reset_section` (bool): A flag that indicates if the section should be reset. Defaults to `False`.
 
     Notes:
-        This will not affect the metadata of the shelf or section. If you wish to reset the metadata, use the Revise model after the Reset model.
+        - This will not affect the metadata of the shelf or section. If you wish to reset the metadata, use the Revise model after the Reset model.
 
     Raises:
-        `ValueError`: If `reset_shelf` and `reset_section` are both `True`. Only one of them can be `True` per query.
+        - `ValueError`: If `reset_shelf` and `reset_section` are both `True`. Only one of them can be `True` per query.
 
     Examples:
         ```Python
@@ -730,7 +782,7 @@ class Reset(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**path_dict)
+    path: str = Field(**hyql_utils.path_dict)
     filters: list[ConditionDict | Group | str] | None = None
     reset_shelf: bool = False
     reset_section: bool = False
