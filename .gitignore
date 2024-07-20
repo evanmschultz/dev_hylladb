@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # Add .DS_Store to the ignore list
 .DS_Store
+
+# Add .vscode to the ignore list
+.vscode

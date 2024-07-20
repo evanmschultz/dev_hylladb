@@ -1,16 +1,11 @@
 import re
 from typing import Any, Literal, LiteralString, Union
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+import hylladb.hyql.hyql_utilities as hyql_utils
 from hylladb.db.models import ShelfModel
 from hylladb.hyql.enums import Operators
-import hylladb.hyql.hyql_utilities as hyql_utils
 
 
 class HyQLBaseModel(BaseModel, validate_assignment=True):
@@ -91,7 +86,7 @@ class Condition(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"Invalid condition format. At least one `is_path_*` boolean flag must be set to `True.\n"
+                "Invalid condition format. At least one `is_path_*` boolean flag must be set to `True.\n"
             )
 
         if data.left_is_path:
@@ -99,7 +94,7 @@ class Condition(HyQLBaseModel):
                 raise ValueError(
                     "\n    HyllaDB Error:\n"
                     "        ---->"
-                    f"When the `left_is_path` flag is set to True, the `left` value must be a valid path string for HyllaDB."
+                    "When the `left_is_path` flag is set to True, the `left` value must be a valid path string for HyllaDB."
                     " Example format: 'section.shelf.dict_key'.\n"
                 )
         if data.right_is_path:
@@ -109,7 +104,7 @@ class Condition(HyQLBaseModel):
                 raise ValueError(
                     "\n    HyllaDB Error:\n"
                     "        ---->"
-                    f"When the `right_is_path` flag is set to True, the `right` value must be a valid path string for HyllaDB."
+                    "When the `right_is_path` flag is set to True, the `right` value must be a valid path string for HyllaDB."
                     " Example format: 'section.shelf.dict_key'.\n"
                 )
         return data
@@ -191,13 +186,13 @@ class Group(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"The value of a group must be a list of conditions, groups, or logical operators. Example format: ['condition', 'AND', 'group']\n"
+                "The value of a group must be a list of conditions, groups, or logical operators. Example format: ['condition', 'AND', 'group']\n"
             )
         if len(value) == 0:
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"The value of a group cannot be an empty list.\n"
+                "The value of a group cannot be an empty list.\n"
             )
 
         for i, item in enumerate(value):
@@ -212,7 +207,7 @@ class Group(HyQLBaseModel):
                     raise ValueError(
                         "\n    HyllaDB Error:\n"
                         "        ---->"
-                        f"Invalid group format. A group must always be a list of conditions, groups, or logical operators, "
+                        "Invalid group format. A group must always be a list of conditions, groups, or logical operators, "
                         "where conditions or groups are separated by logical operators 'AND' | 'OR'.\n"
                     )
             elif not isinstance(item, (ConditionDict, Group)):
@@ -280,7 +275,7 @@ class CheckOutItem(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"The value of a checkout item cannot be an empty list.\n"
+                "The value of a checkout item cannot be an empty list.\n"
             )
 
         for i, item in enumerate(value):
@@ -430,7 +425,7 @@ class SetSchema(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"The `path` field must be None if `is_library` is True.\n"
+                "The `path` field must be None if `is_library` is True.\n"
             )
 
 
@@ -735,7 +730,7 @@ class Remove(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"Only one of `remove_shelf` or `remove_section` can be True.\n"
+                "Only one of `remove_shelf` or `remove_section` can be True.\n"
             )
 
 
@@ -793,5 +788,5 @@ class Reset(HyQLBaseModel):
             raise ValueError(
                 "\n    HyllaDB Error:\n"
                 "        ---->"
-                f"Only one of `reset_shelf` or `reset_section` can be True.\n"
+                "Only one of `reset_shelf` or `reset_section` can be True.\n"
             )
