@@ -1,16 +1,7 @@
-from hylladb.db.models import ShelfModel
-from hylladb.hyql import (
-    BuildShelf,
-    Write,
-    CheckOut,
-    Revise,
-    Remove,
-    Operators,
-)
-
-
 from rich import print
 
+from hylladb.db.models import ShelfModel
+from hylladb.hyql import BuildShelf, CheckOut, Operators, Remove, Revise, Write
 from hylladb.hyql.hyql import SetSchema
 
 
@@ -20,7 +11,7 @@ class AnimalSchema(ShelfModel):
 
 set_schema_idea: dict = {
     "path": "path1.sub_path1",
-    "schema": AnimalSchema,
+    "schema_model": AnimalSchema,
 }
 
 

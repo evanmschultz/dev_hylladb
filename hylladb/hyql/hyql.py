@@ -261,7 +261,6 @@ class CheckOutItem(HyQLBaseModel):
     """
 
     path: str | None = Field(**hyql_utils.path_dict)
-    # shelf_name: str | None = Field(None, pattern=hyql_utils.checkout_pattern)
     checkout: list[str] | list[Literal["*all"]] = Field(
         ["*all"],
         description="A list of keys to be checked out. If the list contains only '*all', all keys will be checked out.",
@@ -294,17 +293,6 @@ class CheckOutItem(HyQLBaseModel):
                         f"Invalid item type at position {i}. Expected a valid path string, eg. eg. `key_1`.\n"
                     )
         return value
-
-    # @model_validator(mode="after")
-    # def _validate_if_shelf_name_checkout_all(self) -> "CheckOutItem":
-    #     if not self.shelf_name:
-    #         if len(self.checkout) > 1 or self.checkout[0] != "*all":
-    #             raise ValueError(
-    #                 "\n    HyllaDB Error:\n"
-    #                 "        ---->"
-    #                 f"Invalid checkout format. If the checkout item is for a section or the library, the checkout list must contain only '*all'.\n"
-    #             )
-    #     return self
 
 
 class SortItem(HyQLBaseModel):
@@ -353,7 +341,7 @@ class SetSchema(HyQLBaseModel):
     Attributes:
         - `path` (str | None): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`. If `None`, the schema will be set for the library.
-        - `schema` (type[ShelfModel] | None): The schema for the section or library. Used to enforce data structure and types for all the `shelves` that are direct children
+        - `schema_model` (type[ShelfModel]): The schema for the section or library. Used to enforce data structure and types for all the `shelves` that are direct children
             of the section or library directory. If `None`, no shelf can be created as a direct child of the section or library directory.
             - NOTE: This is not an instance of the schema class, but the class itself.
         - `is_library` (bool): A flag that indicates if the schema is for the library. Defaults to `False`.
@@ -367,17 +355,17 @@ class SetSchema(HyQLBaseModel):
 
         ```Python
         from hylladb.hyql import SetSchema
-        from hylladb.hyql import HyQLSchema
+        from hylladb.hyql import ShelfModel
 
         # Define the schema for the shelves that are direct children to the section.
-        class Animal(HyQLSchema):
+        class Animal(ShelfModel):
             name: str
 
         # Example set schema query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
         hylladb_set_schema: dict = {
             "path": "path1.sub_path1",
-            "schema": Animal,
+            "schema_model": Animal,
         }
 
         # Instantiate the model by unpacking the dict.
@@ -404,7 +392,7 @@ class SetSchema(HyQLBaseModel):
         # Example set schema query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
         hylladb_set_schema: dict = {
-            "schema": User,
+            "schema_model": User,
             "is_library": True,
         }
 
@@ -413,8 +401,10 @@ class SetSchema(HyQLBaseModel):
         ```
     """
 
-    path: str | None = Field(**hyql_utils.path_dict)
-    schema: type[ShelfModel] | None
+    path: str | None = Field(default=None, **hyql_utils.path_dict)
+    schema_model: type[ShelfModel] = Field(
+        ..., description="The schema for the section or library."
+    )
     is_library: bool = False
 
     @model_validator(mode="after")
@@ -437,12 +427,12 @@ class BuildShelf(HyQLBaseModel):
         - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
         - `name` (str): The name of the shelf. Must follow the same naming conventions as a Python variable name, eg. `shelf_1`.
-        - `data` (dict[str, Any] | None): The data to be written to the path. If passing in data must conform to the `schema` defined in the section.
+        - `data` (dict[str, Any] | None): The data to be written to the path. If passing in data must conform to the `schema_model` defined in the section.
         - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
 
     Examples:
         ```Python
-        from hylladb.hyql import Build
+        from hylladb.hyql import BuildShelf
 
         # Example build query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
@@ -452,7 +442,7 @@ class BuildShelf(HyQLBaseModel):
         }
 
         # Instantiate the model by unpacking the dict.
-        build = Build(**hylladb_build)
+        build = BuildShelf(**hylladb_build)
 
         # Pass it into the HyQL query method.
         ```
@@ -472,14 +462,14 @@ class BuildSection(HyQLBaseModel):
         - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
         - `name` (str): The name of the section. Must follow the same naming conventions as a Python variable name, eg. `section_1`.
-        - `schema` (Schema | None): The schema for the section. Used to enforce data structure and types for all the `shelves` that are direct children
+        - `schema_model` (ShelfModel | None): The schema for the section. Used to enforce data structure and types for all the `shelves` that are direct children
             of the section. If `None`, no shelf can be created as a direct child of the section.
         - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
     """
 
     path: str = Field(**hyql_utils.path_dict)
     name: str = Field(pattern=r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$")
-    schema: ShelfModel | None
+    schema_model: ShelfModel | None
     metadata: dict[str, Any] | None = None
 
 
@@ -606,9 +596,6 @@ class Revise(HyQLBaseModel):
         - `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
         - `data` (dict[str, Any]): The data to be written to the path.
 
-    Raises:
-        - `ValueError`: If the path is the `metadata` and the `schema` key is missing from the `data` dictionary.
-
     Examples:
         ```Python
         # Import the Operators Enum if you want to use the enum values instead of strings as a guide.
@@ -715,7 +702,7 @@ class Remove(HyQLBaseModel):
         }
 
         # Instantiate the model by unpacking the dict.
-        Remove(**remove_idea)
+        Remove(**hylladb_remove)
         ```
     """
 
@@ -773,7 +760,7 @@ class Reset(HyQLBaseModel):
         }
 
         # Instantiate the model by unpacking the dict.
-        Reset(**reset_idea)
+        Reset(**hylladb_reset)
         ```
     """
 

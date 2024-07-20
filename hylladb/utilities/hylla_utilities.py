@@ -1,4 +1,6 @@
+import re
 from pathlib import Path
+import hylladb.hyql.hyql_utilities as hyql_utils
 
 
 def resolved_section_path(section_path: str, library_path: Path) -> Path:
@@ -17,12 +19,21 @@ def get_shelf_path(shelf_path: str, library_path: Path) -> Path:
     return resolved_path
 
 
+# def get_validated_path_str(path: str) -> str:
+#     try:
+#         path_str: str = path.replace(".", "/")
+#         Path(path_str).resolve()
+#         return path_str
+#     except Exception as e:
+#         raise ValueError(
+#             f"Invalid path format: {path}. Expected format: `parent.target`"
+#         ) from e
+
+
 def get_validated_path_str(path: str) -> str:
-    try:
-        path_str: str = path.replace(".", "/")
-        Path(path_str).resolve()
-        return path_str
-    except Exception as e:
+    if not re.match(hyql_utils.path_pattern, path):
         raise ValueError(
             f"Invalid path format: {path}. Expected format: `parent.target`"
-        ) from e
+        )
+    path_str: str = path.replace(".", "/")
+    return path_str

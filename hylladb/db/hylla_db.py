@@ -36,7 +36,7 @@ class HyllaDB:
 
         self._add_path({section_path_str: PathType.SECTION})
 
-        if hyql.schema:
+        if hyql.schema_model:
             # Add shelf for the section schema
             # Add path for the schema
             pass
