@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 
-from hylladb.hyql.hyql_base.schema_model import SchemaModel
 from hylladb.hyql import (
     BuildShelf,
     CheckOut,
@@ -17,6 +16,7 @@ from hylladb.hyql import (
     Write,
 )
 from hylladb.hyql.hyql import BuildSection
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 
 
 # Condition Model Tests
@@ -326,17 +326,6 @@ def test_checkout_valid() -> None:
     assert checkout.offset == 0
 
 
-# Revise Model Tests
-# def test_revise_valid() -> None:
-#     """
-#     Test creating a valid Revise model.
-#     Ensures that a Revise object with valid inputs is created successfully.
-#     """
-#     revise = Revise(path="section_1.shelf_1", data={"field1": "value1"})
-#     assert revise.path == "section_1.shelf_1"
-#     assert revise.data == {"field1": "value1"}
-
-
 def test_revise_valid_filters_with_condition_dict() -> None:
     """
     Test creating a valid Revise model with filters containing ConditionDict.
@@ -390,29 +379,6 @@ def test_revise_valid() -> None:
     revise = Revise(path="section_1.shelf_1", data={"field1": "value1"})
     assert revise.path == "section_1.shelf_1"
     assert revise.data == {"field1": "value1"}
-
-
-# # Remove Model Tests
-# def test_remove_valid() -> None:
-#     """
-#     Test creating a valid Remove model.
-#     Ensures that a Remove object with valid inputs is created successfully.
-#     """
-#     remove = Remove(path="section_1.shelf_1", remove_shelf=True)
-#     assert remove.path == "section_1.shelf_1"
-#     assert remove.remove_shelf is True
-
-
-# def test_remove_both_flags_true() -> None:
-#     """
-#     Test creating a Remove model with both remove_shelf and remove_section set to True.
-#     Ensures that a ValidationError is raised if both remove_shelf and remove_section are True.
-#     """
-#     with pytest.raises(ValidationError):
-#         Remove(path="section_1.shelf_1", remove_shelf=True, remove_section=True)
-
-
-# Remove Model Tests
 
 
 def test_remove_valid_filters_with_condition_dict() -> None:
@@ -472,29 +438,6 @@ def test_remove_both_flags_true() -> None:
     """
     with pytest.raises(ValidationError):
         Remove(path="section_1.shelf_1", remove_shelf=True, remove_section=True)
-
-
-# Reset Model Tests
-# def test_reset_valid() -> None:
-#     """
-#     Test creating a valid Reset model.
-#     Ensures that a Reset object with valid inputs is created successfully.
-#     """
-#     reset = Reset(path="section_1.shelf_1", reset_shelf=True)
-#     assert reset.path == "section_1.shelf_1"
-#     assert reset.reset_shelf is True
-
-
-# def test_reset_both_flags_true() -> None:
-#     """
-#     Test creating a Reset model with both reset_shelf and reset_section set to True.
-#     Ensures that a ValidationError is raised if both reset_shelf and reset_section are True.
-#     """
-#     with pytest.raises(ValidationError):
-#         Reset(path="section_1.shelf_1", reset_shelf=True, reset_section=True)
-
-
-# Reset Model Tests
 
 
 def test_reset_valid_filters_with_condition_dict() -> None:
