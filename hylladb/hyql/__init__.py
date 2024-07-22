@@ -23,3 +23,4 @@ from hylladb.hyql.hyql import (
     Transaction,
     Write,
 )
+from hylladb.hyql.hyql_base.schema_model import SchemaModel

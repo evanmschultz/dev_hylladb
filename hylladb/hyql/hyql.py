@@ -1,13 +1,11 @@
-import re
-from typing import Any, Literal, LiteralString, Union
+from typing import Any, Literal, Union
 
 from pydantic import Field, field_validator, model_validator
 
 import hylladb.hyql.hyql_utilities as hyql_utils
 import hylladb.hyql.validators as validators
-from hylladb.db.models import SchemaModel
-from hylladb.hyql.enums import Operators
 from hylladb.hyql.hyql_base.hyql_base_model import HyQLBaseModel
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 
 
 class Condition(HyQLBaseModel):

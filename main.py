@@ -1,6 +1,6 @@
 from rich import print
 
-from hylladb.db.models import SchemaModel
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 from hylladb.hyql import BuildShelf, CheckOut, Operators, Remove, Revise, Write
 from hylladb.hyql.hyql import SetSchema, Transaction
 

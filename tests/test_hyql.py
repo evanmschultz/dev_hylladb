@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from hylladb.db.models import SchemaModel
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 from hylladb.hyql import (
     BuildShelf,
     CheckOut,

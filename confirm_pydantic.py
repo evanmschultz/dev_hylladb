@@ -1,7 +1,7 @@
 from pydantic import ConfigDict
 from rich import print
 
-from hylladb.db.models import SchemaModel
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 
 
 # Define the base class
@@ -70,7 +70,7 @@ from typing import Any, Type, get_type_hints
 
 from glom import Path, PathAccessError, glom
 
-from hylladb.db.models import SchemaModel
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 
 
 class NestedModel(SchemaModel):
