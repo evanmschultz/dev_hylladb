@@ -1,8 +1,6 @@
-# HyQL (Hylla Query Language) - 'Hi-Quill'
+Welcome to HyQL, the custom query language for HyllaDB, a database system built with speed, flexibility, and customizability of data storage in mind. HyllaDB is engineered and inspired by the ideology of an IKEA flat-pack, or rather LEGO or erector sets modularity, offering the necessary building blocks to construct a database tailored precisely to your needs.
 
-Welcome to HyQL, the custom query language for HyllaDB, a database system that built with speed, flexibility, and customizability of data storage in mind. HyllaDB is engineered and inspired the ideology of an IKEA flat-pack, or rather lego or erector sets modularity, offering the necessary building blocks to construct a database tailored precisely to your needs.
-
-At its core, it operates like a dictionary of dictionaries, with the added benefit of being able to store complex Python objects, including class instances, e.g., trained machine learning models from libraries like scikit-learn or tensorflow, along with more standard data types like lists, dictionaries, and more. This flexibility is a key feature of HyllaDB, allowing users to store data in a manner that best suits their needs. Similar in effect to NetworkX's documentation statement, “[It’s dictionaries all the way down.](https://networkx.org/documentation/stable/reference/introduction.html#id2)”
+At its core, it operates like a dictionary of dictionaries, with the added benefit of being able to store complex Python objects, including class instances, e.g., trained machine learning models from libraries like scikit-learn or tensorflow, along with more standard data types like lists, dictionaries, and more. This flexibility is a key feature of HyllaDB, allowing users to store data in a manner that best suits their needs. Similar in effect to NetworkX's documentation statement, "[It's dictionaries all the way down.](https://networkx.org/documentation/stable/reference/introduction.html#id2)"
 
 Just as LEGO bricks enable endless possibilities, HyllaDB provides the tools for users to build a database system that is as unique and adaptable as their data requires. This documentation introduces HyQL, emphasizing its key role in interacting with the dynamic architecture of HyllaDB and highlighting the system's speed and efficiency in data retrieval.
 
@@ -16,9 +14,9 @@ HyllaDB is designed with a modular, layered structure, while taking inspiration 
 
 **Library**: The foundational layer, serving as the primary directory of the database.
 
-**Sections**: These are akin to sections in a library, eg. Sciences, and then Physics. Yet, can also represent a specific 'bookcase' within a 'section' of a library. This allows for the organization of data in a structured yet flexible manner while allowing for fast read/write speeds, only dependent upon your system's I/O constraints.
+**Sections**: These are akin to sections in a library, e.g., Sciences, and then Physics. Yet, can also represent a specific 'bookcase' within a 'section' of a library. This allows for the organization of data in a structured yet flexible manner while allowing for fast read/write speeds, only dependent upon your system's I/O constraints.
 
-**Shelves**: Resembling individual shelves, drawers, containers, or even books themselves, these shelve files hold data, be it flat or nested dictionaries. If your needs best fit it, you can forgo any use of 'sections' and simply store all your data in 'shelves' the 'library' directory, while still keeping a nested structure. Keep in mind this would be even more constrained by your system's I/O capabilities as more data would need to be serialized/deserialized upon each read/write.
+**Shelves**: Resembling individual shelves, drawers, containers, or even books themselves, these shelf files hold data, be it flat or nested dictionaries. If your needs best fit it, you can forgo any use of 'sections' and simply store all your data in 'shelves' in the 'library' directory, while still keeping a nested structure. Keep in mind this would be even more constrained by your system's I/O capabilities as more data would need to be serialized/deserialized upon each read/write.
 
 The architecture of HyllaDB, coupled with the intuitive navigation provided by HyQL's path strings, allows for swift and efficient data access and manipulation. This design not only facilitates ease of use but also optimizes lookup speeds, making data retrieval exceptionally fast.
 
@@ -48,61 +46,9 @@ To navigate these waters safely, consider the following best practices:
 
 By adhering to these guidelines, users can harness the full potential of HyllaDB and HyQL, balancing the benefits of a highly customizable database with the imperative of data security.
 
----
-
-As we delve deeper into the subsequent sections, we will explore the intricacies of constructing and executing queries with HyQL, maximizing the benefits of HyllaDB's modular design in your data storage and retrieval strategies.
-
-## Overview of HyllaDB Structure
-
-HyllaDB's architecture is meticulously designed to mirror the organization and efficiency of a well-structured library, providing a familiar yet innovative approach to data storage. This section will guide you through the fundamental layers of HyllaDB, illustrating how its unique structure enhances both flexibility and performance.
-
-### **The Library:** Foundation of HyllaDB
-
-At the base of HyllaDB's architecture lies the Library. This foundational layer serves as the primary directory of the database and acts as the entry point for all data interactions. Think of it as the main hall of a library, where every book, shelf, and section is catalogued and accessible.
-
-**Centralized Hub:** The Library directory is the centralized hub for all data stored in HyllaDB, offering a unified view of your database's structure.
-
-**Root Directory:** All sections and shelves are nested within this root directory, making it the starting point for any data retrieval or manipulation.
-
-### **Sections:** Organizational Units within the Library
-
-**Sections** in HyllaDB are akin to specific areas or bookcases in a traditional library. They offer a way to categorize and compartmentalize data, facilitating efficient organization and retrieval.
-
-**Flexible Categorization:** Just as a library has sections for different genres or subjects, HyllaDB's sections allow for a logical grouping of related data.
-
-**Nested Structure:** Sections can contain shelves, enabling a nested and hierarchical data structure that mirrors real-world data relationships.
-
-### Shelves: The Core Data Containers
-
-The heart of data storage in HyllaDB lies in the Shelves. These are the actual shelve files where your data resides, be it in flat or nested dictionaries.
-
-**Versatile Storage:** Shelves can hold a wide range of data types, from simple key-value pairs to complex, nested structures.
-
-**Direct Access:** Each shelf is directly accessible within its section, providing a streamlined approach to data retrieval and updates.
-
-### Path Strings: Navigating the HyllaDB Architecture
-
-A crucial component of interacting with HyllaDB is the use of path strings in HyQL. These strings are deliberately designed to represent the path to the desired data, whether it resides in a section, shelf, or a nested dictionary within a shelf.
-
-**Intuitive Navigation:** Path strings allow for easy and precise navigation through the layers of the database, making data access straightforward.
-
-**Unified Access Pattern:** Regardless of the data's location (section, shelf, or nested dictionary), the path string format remains consistent, ensuring a uniform access pattern.
-
-### Harnessing the Power of HyllaDB's Structure
-
-By understanding and utilizing the distinct layers of HyllaDB, users can create a database that not only reflects the complexity of their data but also enhances the efficiency of data access and manipulation. The modular nature of HyllaDB, combined with the intuitive and flexible nature of HyQL, could make it a useful software engineers or data professionals seeking to fast prototype, especially when persistence of complex `Python` objects are needed. Who knows, if enough interest is shown, HyllaDB, and by extension, HyQL, could become a viable alternative to the more traditional database systems for production use cases.
-
-**Tailored Data Organization:** Users have the freedom to structure their database in a way that aligns with their specific data requirements and usage patterns.
-
-**Optimized Data Retrieval:** The clear and logical structure of HyllaDB, coupled with the HyQLs flexibility in conjunction with its type safety and clear error messaging, ensures fast and accurate data retrieval, essential for applications that need performance and/or non-traditional data structures.
-
----
-
-In the following sections, we will dive into the core concepts of HyQL, exploring how this unique query language leverages the robust structure of HyllaDB to offer unparalleled flexibility and efficiency in data querying.
-
 # Core Concepts and Models of HyQL
 
-Welcome to the heart of HyQL - the place where the 'how' of this language comes alive. In this section, we merge the core concepts with detailed model explanations, providing you with a clear picture of how HyQL functions and how its various components interact to facilitate querying in HyllaDB. Our journey into HyQL begins with understanding its key elements: path strings, filters, conditions, groups, and operators, and then delving into the specific models that make up the language.
+In this section, we merge the core concepts with detailed model explanations, providing you with a clear picture of how HyQL functions and how its various components interact to facilitate querying in HyllaDB. Our journey into HyQL begins with understanding its key elements: path strings, filters, conditions, groups, and operators, and then delving into the specific models that make up the language.
 
 ## Key Terms and Concepts in HyQL
 
@@ -110,13 +56,13 @@ Welcome to the heart of HyQL - the place where the 'how' of this language comes 
 
 **Definition:** A path string in HyQL is a dot-separated identifier that specifies the location of data within HyllaDB, much like a pathway through the database's structure.
 
-**Function:** These strings navigate through the layers of the database, targeting data whether it’s in a section, shelf, or nested dictionary.
+**Function:** These strings navigate through the layers of the database, targeting data whether it's in a section, shelf, or nested dictionary.
 
 **Example:** "section1.shelf2.data_field" represents a path leading to data_field in shelf2 of section1.
 
 ### Filters
 
-**Role:** Filters in HyQL are used to narrow down the data retrieved from the database based on specified criteria. > NOTE: Dependent upon how you structure your database in HyllaDB, you can do complex joins and filtering of data, similar to how you would in a relational database.
+**Role:** Filters in HyQL are used to narrow down the data retrieved from the database based on specified criteria.
 
 **Structure:** They consist of conditions and groups that define the criteria for filtering the data.
 
@@ -140,152 +86,74 @@ Welcome to the heart of HyQL - the place where the 'how' of this language comes 
 
 ## Scaffolding Models
 
-Each model in HyQL serves a specific purpose, from defining conditions to shaping entire queries. Here, we’ll explore each model, their attributes, and their role in crafting HyQL queries.
+Each model in HyQL serves a specific purpose, from defining conditions to shaping entire queries. Here, we'll explore each model, their attributes, and their role in crafting HyQL queries.
 
-### <u>Condition Model</u>
+### Condition Model
 
 **Purpose:** Defines a single comparison or logical statement.
 
-**Attributes:** left, operator, right, left_is_path, right_is_path.
+**Attributes:**
+
+-   `left`: The left operand (value or path)
+-   `operator`: The comparison operator
+-   `right`: The right operand (value or path)
+-   `left_is_path`: Boolean indicating if the left operand is a path
+-   `right_is_path`: Boolean indicating if the right operand is a path
 
 **Example:**
 
 ```python
 from hylladb.hyql import Condition, Operators
 
-# Define a condition using the `Pydantic` model
-condition_example = Condition(left="section1.shelf2.data_field", operator=Operators.GREATER_THAN, right=100)
+condition_example = Condition(
+    left="section1.shelf2.data_field",
+    operator=Operators.GREATER_THAN,
+    right=100
+)
 ```
 
-The left and right attributes can be either a value or a path string, depending on the `left_is_path` and `right_is_path` attributes. If `left_is_path` is True, the left attribute is a path string, and if `right_is_path` is True, the right attribute is a path string. If both are True, the condition is a path comparison, and if both are False, the condition is a value comparison. If only one is True, the condition is a mixed comparison.
+### ConditionDict Model
 
-Here is an example of a dictionary representation of a condition:
+**Purpose:** Wraps a single Condition object, used for easier integration with other models.
+
+**Attributes:**
+
+-   `condition`: A Condition object
+
+**Example:**
 
 ```python
-from hylladb.hyql import Condition, Operators
+from hylladb.hyql import Condition, ConditionDict, Operators
 
-# Define a condition as a dictionary
-"condition": {
-    "left": "name",
-    # Note: the use of the Operators enum. The enum is just to make it easier to use the operators if you
-    # don't remember the allowed string values off hand. This will be explained in more detail later.
-    "operator": Operators.IN,
-    "right": "path1.field2",
-    "left_is_path": False,
-    "right_is_path": True,
-}
-
-# Convert the dictionary to a Condition object by unpacking it as kwargs using the `**` operator
-condition = Condition(**condition)
+condition = Condition(
+    left="name",
+    operator=Operators.IN,
+    right="path1.field2",
+    left_is_path=False,
+    right_is_path=True
+)
+condition_dict = ConditionDict(condition=condition)
 ```
 
-> NOTE: The structure of the condition object is meant to mirror the way you would write a condition in Python, e.g., `if name in path1.field2:`. It is meant to be flexible and intuitive, and allow you to construct complex conditions as you would if you were writing a Python script.
-
-### <u>Group Model</u>
+### Group Model
 
 **Role:** Groups multiple Condition instances or other Group instances, using logical connectors.
 
-**Structure:** Consists of a list containing Condition objects and logical operators, specifically the strings `AND` or `OR`. The structure of the list is as follows: `[Condition, "AND", Condition, "OR", Group]`. Conditions or Groups must always be separated by a logical operator.
+**Structure:** Consists of a list containing ConditionDict objects, Group objects, and logical operators (strings "AND" or "OR").
 
 **Example:**
 
 ```python
-from hylladb.hyql import Condition, Group, Operators
+from hylladb.hyql import Condition, ConditionDict, Group, Operators
 
-# Define a group using the `Pydantic` model
-group_example = Group(group=[condition_example, Operators.AND, another_condition])
+group_example = Group(group=[
+    ConditionDict(condition=Condition(left="field1", operator=Operators.EQUAL, right=10)),
+    "AND",
+    ConditionDict(condition=Condition(left="field2", operator=Operators.GREATER_THAN, right=20))
+])
 ```
 
-Here is an example of a dictionary representation of a more complex 'nested' group:
-
-```python
-from hylladb.hyql import Group, Operators
-
-"group": [
-                {
-                    "condition": {
-                        "left": "name",
-                        "operator": Operators.IN,
-                        "right": "path1.field2",
-                        "left_is_path": False,
-                        "right_is_path": True,
-                    }
-                },
-                "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
-            ]
-
-# Convert the dictionary to a Group object by unpacking it as kwargs using the `**` operator
-group = Group(**group)
-```
-
-> NOTE: The condition was not explicitly imported or defined as the model made the condition automatically while unpacking the dictionary. This is a feature of `Pydantic` that allows for the creation of nested models.
-
-### <u>Filters</u>
-
-As of now there is no explicit Filter model, as it is simply a list of Condition and Group objects. This may change in the future, but for now, it is just a list of Condition and Group objects. The structure of the list is as follows: `[Condition, "AND", Condition, "OR", Group]`. Conditions or Groups must always be separated by a logical operator. It still mirrors the logic of a Python script, e.g.,
-
-```python
-if (
-    name in path1.field2
-    and path2.field3 < path1.field2
-    or path3.field4 == 100
-):
-    # do something
-```
-
-**Example of complex filters with a dictionary:**
-
-```python
-from hylladb.hyql import Operators, CheckOut
-filters = [
-        {
-            "condition": {
-                "left": "path1.field1",
-                "operator": ">=",
-                "right": 1,
-            }
-        },
-        "AND",
-        {
-            "group": [
-                {
-                    "condition": {
-                        "left": "name",
-                        "operator": Operators.IN,
-                        "right": "path1.field2",
-                        "left_is_path": False,
-                        "right_is_path": True,
-                    }
-                },
-                "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
-            ]
-        },
-    ],
-
-# Add to CheckOut model. NOTE: This is not a working example as the ellipses are meant to only represent
-# the rest of the model's attributes.
-checkout = CheckOut(..., filters=filters)
-```
-
-> NOTE: As HyllaDB, and by extension HyQL is built on the idea of flexibility and modularity, the filters, groups, conditions, etc. you could construct is dependent upon how you structure your database.
-
-### <u>CheckOutItem Model</u>
+### CheckOutItem Model
 
 **Function:** Specifies the data fields to retrieve from a particular path.
 
@@ -294,260 +162,228 @@ checkout = CheckOut(..., filters=filters)
 **Example:**
 
 ```python
-checkout_item = CheckOutItem(path="section1.shelf2", checkout=["data_field1", "data_field2"])
-```
-
-**Example using a dictionary:**
-
-```python
 from hylladb.hyql import CheckOutItem
 
-checkout_item = {
-    "path": "section1.shelf2",
-    "checkout": ["data_field1", "data_field2"],
-}
-
-# Convert the dictionary to a CheckOutItem object by unpacking it as kwargs using the `**` operator
-checkout_item = CheckOutItem(**checkout_item)
+checkout_item = CheckOutItem(
+    path="section1.shelf2",
+    checkout=["data_field1", "data_field2"]
+)
 ```
 
-## Operators
+### SetSchema Model
 
-Before we continue and explain the models that actually make up HyQL, let's talk about the Operators.
+**Purpose:** Sets or updates the schema for a section or the library.
 
-First, practically all logical operators in Python are meant to work inside of a `Condition`, which by extension they fit into a `Group`, and by extension a `Filter`. HyQL is built with an Operators enum to help see all of the possible operators you can use in HyQL. The Operators enum is meant to be a convenience, as it is not required to use it. You can simply use the string representation of the operator, e.g., `">="` instead of `Operators.GREATER_THAN_OR_EQUAL`. So, don't worry about feeling like you need to use the enum, or, in cases where you are concerned about exact syntactical correctness, you can use the enum.
+**Attributes:**
 
-> NOTE: The Operators enum inherits from the `str` class, so you can use it as a string, e.g., `Operators.GREATER_THAN_OR_EQUAL == ">="` is `True`. Ensuring that you can exactly, and easily interchange the two based on your needs. Below is a simple example of how you can use the Operators enum.
-
-```python
-from hylladb.hyql import Operators
-
-# This is the `Literal` string "not in" and will work exactly as the Python `not in` operator
-operator = Operators.NOT_IN
-```
-
-More information on the allowed operations will be detailed in the documentation later. As for now, just use the Operators enum as a reference for the allowed operators and expect that they will work as they do in any Python script.
-
-# HyQL Query Models: Crafting Queries in HyllaDB
-
-In the previous sections, we introduced the foundational elements of HyQL. Now, let's explore the models that form the core of query operations in HyllaDB. These models - `Build`, `CheckOut`, `Write`, `Revise`, and `Remove` - are designed to handle the complete range of CRUD (Create, Read, Update, Delete) operations, allowing users to interact with their data in HyllaDB effectively.
-
-## Build Query Model
-
-The `Build` model in HyQL is used for creating new structures within HyllaDB. It is used to create new sections or shelves. In actuality, it creates a new directory (section), or a new database file (shelf) that you can in turn use to store data.
-
-### Key Fields:
-
-**path:** Specifies the location in the database where the data will be created.
-
-**data:** The actual data to be stored. It can be a dictionary mapping keys to values.
-
-**metadata:** Optional metadata associated with the data.
-
-**is_section:** A boolean indicating if the path represents a section. If True, data must be None.
+-   `path`: The path to the section (or None for library)
+-   `schema_model`: The Pydantic model defining the schema
+-   `is_library`: Boolean indicating if the schema is for the library
 
 **Example:**
 
 ```python
-from hylladb.hyql import Build
+from hylladb.hyql import SetSchema, SchemaModel
 
-# Create a new section
-build = Build(path="section1", is_section=True)
+class UserSchema(SchemaModel):
+    name: str
+    age: int
+
+set_schema = SetSchema(
+    path="users",
+    schema_model=UserSchema
+)
 ```
 
-As a dictionary:
+### BuildShelf Model
+
+**Purpose:** Used to create a new shelf in HyllaDB.
+
+**Attributes:**
+
+-   `path`: The path where the shelf will be created
+-   `name`: The name of the new shelf
+-   `data`: Optional initial data for the shelf
+-   `metadata`: Optional metadata for the shelf
+
+**Example:**
 
 ```python
-from hylladb.hyql import Build
+from hylladb.hyql import BuildShelf
 
-# Create a shelf, not a section
-build_query: dict = {
-    "path": "path1.sub_path1",
-}
-
-# Convert the dictionary to a Build object by unpacking it as kwargs using the `**` operator
-built_model = Build(**build_query)
+build_shelf = BuildShelf(
+    path="section1",
+    name="new_shelf",
+    data={"field1": "value1", "field2": "value2"}
+)
 ```
 
-Use the Build model to initialize new sections or shelves in your database as a straightforward way to expand your data structure to fit your needs.
+### BuildSection Model
 
-## Checkout Query Model
+**Purpose:** Used to create a new section in HyllaDB.
 
-Checkout is the HyQL model used for reading (`select`ing or `get`ing) data from HyllaDB. It allows you to specify exactly what data you want to retrieve, as much or as little, making data access both efficient and precise.
+**Attributes:**
 
-### Key Fields:
+-   `path`: The path where the section will be created
+-   `name`: The name of the new section
+-   `schema_model`: Optional schema model for the section
+-   `metadata`: Optional metadata for the section
 
-**checkout:** A list of CheckoutItem objects, each specifying a path and the fields to retrieve from that path.
+**Example:**
 
-**filters:** Optional list of Condition or Group objects to filter the data being retrieved.
+```python
+from hylladb.hyql import BuildSection, SchemaModel
 
-**sort:** Optional list of SortItem objects to order the results.
+class SectionSchema(SchemaModel):
+    field1: str
+    field2: int
 
-**limit:** An optional integer to limit the number of results returned.
-
-**offset:** An optional integer indicating the number of results to skip (useful for pagination).
-
-**Example using a dictionary:**
-
-```Python
-from hylladb.hyql import CheckOut
-
-checkout_dict: dict = {
-    "checkout": [
-        {
-            "path": "path1.sub_path1",
-            "checkout": ["sub_path1.field1", "sub_path1.field2"],
-        },
-        {
-            "path": "path2",
-            "checkout": ["*all"],
-        },
-    ],
-    "filters": [
-        {
-            "condition": {
-                "left": "path1.field1",
-                "operator": ">=",
-                "right": 1,
-            }
-        },
-        "AND",
-        {
-            "group": [
-                {
-                    "condition": {
-                        "left": "name",
-                        "operator": Operators.IN,
-                        "right": "path1.field2",
-                        "left_is_path": False,
-                        "right_is_path": True,
-                    }
-                },
-                "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
-            ]
-        },
-    ],
-    "sort": [{"path": "path1.field1"}],
-    "limit": 10,
-    "offset": 0,
-}
-
-# Convert the dictionary to a CheckOut object by unpacking it as kwargs using the `**` operator
-checkout = CheckOut(**checkout_dict)
+build_section = BuildSection(
+    path="library",
+    name="new_section",
+    schema_model=SectionSchema
+)
 ```
 
-## Write Query Model
+### Write Model
 
-`Write` in HyQL is used for creating data in an existing `shelf` in HyllaDB. It’s like adding pages in a book on your shelf.
+**Purpose:** Used to write or upsert data to an existing shelf in the database.
 
-### Key Fields:
+**Attributes:**
 
-**path:** Specifies the location in the database where the data will be created. This can be an empty shelf or a nested dictionary within a shelf.
+-   `path`: The path to the shelf or nested dictionary
+-   `data`: The data to be written
 
-> NOTE: If the path is not to an existing shelf or a key in the nested dictionary within an existing shelf, an error will be raised.
-
-**data:** The actual data to be stored. It must be a dictionary.
-
-**Example with dictionary:**
+**Example:**
 
 ```python
 from hylladb.hyql import Write
 
-write_idea: dict = {
-    "path": "path1.sub_path1",
-    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
-}
-
-# Convert the dictionary to a Write object by unpacking it as kwargs using the `**` operator
-write = Write(**write_idea)
+write = Write(
+    path="section1.shelf1",
+    data={"field1": "new_value", "field2": 42}
+)
 ```
 
-**Example instantiating tbe model directly:**
+### CheckOut Model
+
+**Purpose:** Used to retrieve data from the database.
+
+**Attributes:**
+
+-   `checkout`: List of CheckOutItem objects
+-   `filters`: Optional list of conditions or groups
+-   `sort`: Optional list of SortItem objects
+-   `limit`: Optional maximum number of results
+-   `offset`: Optional number of results to skip
+
+**Example:**
 
 ```python
-from hylladb.hyql import Write
+from hylladb.hyql import CheckOut, CheckOutItem, Condition, ConditionDict, Operators
 
-write = Write(path="path1.sub_path1", data={"sub_path1.field1": "value1", "sub_path1.field2": "value2"})
+checkout = CheckOut(
+    checkout=[CheckOutItem(path="section1.shelf1", checkout=["field1", "field2"])],
+    filters=[
+        ConditionDict(condition=Condition(left="field1", operator=Operators.EQUAL, right="value"))
+    ],
+    limit=10,
+    offset=0
+)
 ```
 
-## Revise Query Model
+### Revise Model
 
-> NOTE: TODO: Add logic for updating metadata, make sure to include schema validation.
+**Purpose:** Used to update existing data in the database.
 
-`Revise` in HyQL is used for updating data in an existing `shelf` in HyllaDB. It’s like editing a page in a book on your shelf.
+**Attributes:**
 
-### Key Fields:
+-   `path`: The path to the data to be updated
+-   `filters`: Optional list of conditions or groups
+-   `data`: The new data to be written
 
-**path:** Specifies the location in the database where the data will be updated. This can be a shelf or a nested dictionary within a shelf.
-
-**data:** The actual data to be stored. It must be a dictionary.
-
-**Example with dictionary:**
+**Example:**
 
 ```python
-from hylladb.hyql import Revise
+from hylladb.hyql import Revise, Condition, ConditionDict, Operators
 
-revise_idea: dict = {
-    "path": "path1.sub_path1",
-    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
-}
-
-# Convert the dictionary to a Revise object by unpacking it as kwargs using the `**` operator
-revise = Revise(**revise_idea)
+revise = Revise(
+    path="section1.shelf1",
+    filters=[
+        ConditionDict(condition=Condition(left="field1", operator=Operators.EQUAL, right="old_value"))
+    ],
+    data={"field1": "new_value", "field2": 42}
+)
 ```
 
-**Example instantiating tbe model directly:**
+### Remove Model
+
+**Purpose:** Used to remove data from the database.
+
+**Attributes:**
+
+-   `path`: The path to the data to be removed
+-   `filters`: Optional list of conditions or groups
+-   `remove_shelf`: Boolean indicating if the entire shelf should be removed
+-   `remove_section`: Boolean indicating if the entire section should be removed
+
+**Example:**
 
 ```python
-from hylladb.hyql import Revise
+from hylladb.hyql import Remove, Condition, ConditionDict, Operators
 
-revise = Revise(path="path1.sub_path1", data={"sub_path1.field1": "value1", "sub_path1.field2": "value2"})
+remove = Remove(
+    path="section1.shelf1",
+    filters=[
+        ConditionDict(condition=Condition(left="field1", operator=Operators.EQUAL, right="value"))
+    ],
+    remove_shelf=False
+)
 ```
 
-## Remove Query Model
+### Reset Model
 
-`Remove` in HyQL is used for deleting data in an existing `shelf`, or `section` in HyllaDB.
+**Purpose:** Used to reset (clear) data in a shelf or section without removing the structure itself.
 
-> **NOTE:** Be mindful when using the remove model in a query as it will delete any data that is a child of the path. **For example:** if you remove a section, it will delete all the shelves in that section.
+**Attributes:**
 
-### Key Fields:
+-   `path`: The path to the shelf or section to be reset
+-   `filters`: Optional list of conditions or groups
+-   `reset_shelf`: Boolean indicating if a shelf should be reset
+-   `reset_section`: Boolean indicating if a section should be reset
 
-**path:** Specifies the location in the database where the data will be deleted. This can be a shelf or a nested dictionary within a shelf.
-
-**filters:** Optional list of Condition or Group objects to filter the data being deleted.
-
-**remove_shelf:** A boolean indicating if the path represents a shelf. If True, all data in the shelf will be deleted. If False, all data in the nested dictionary will be deleted.
-
-**remove_section:** A boolean indicating if the path represents a section. If True, all data in the section will be deleted, including all of the shelves. If False, all data in the nested dictionary will be deleted.
-
-**Example with dictionary:**
+**Example:**
 
 ```python
-from hylladb.hyql import Remove
+from hylladb.hyql import Reset
 
-remove_idea: dict = {
-    "path": "path1.sub_path1",
-    "remove_shelf": True,
-}
-
-# Convert the dictionary to a Remove object by unpacking it as kwargs using the `**` operator
-remove = Remove(**remove_idea)
+reset = Reset(
+    path="section1.shelf1",
+    reset_shelf=True
+)
 ```
 
-**Example instantiating tbe model directly:**
+### Transaction Model
+
+**Purpose:** Allows for executing multiple queries in a single transaction.
+
+**Attributes:**
+
+-   `queries`: List of query operations to be executed in the transaction
+
+**Example:**
 
 ```python
-from hylladb.hyql import Remove
+from hylladb.hyql import Transaction, Write, Remove
 
-remove = Remove(path="path1.sub_path1", remove_shelf=True)
+transaction = Transaction(
+    queries=[
+        Write(path="section1.shelf1", data={"field1": "new_value"}),
+        Remove(path="section1.shelf2", remove_shelf=True)
+    ]
+)
 ```
 
-# HyQL Query Execution
+## Conclusion
+
+HyQL provides a flexible and powerful way to interact with HyllaDB. By understanding these core concepts and models, you can construct complex queries to efficiently store, retrieve, update, and delete data in your HyllaDB database. Remember that the modular nature of HyllaDB allows you to structure your data in a way that best suits your needs, and HyQL provides the tools to interact with that structure effectively.
