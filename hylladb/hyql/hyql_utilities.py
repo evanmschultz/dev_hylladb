@@ -1,6 +1,7 @@
 from hylladb.hyql.enums import Operators
 
 path_pattern: str = r"^[A-Za-z0-9]+(?:[._][A-Za-z0-9]+)*$"
+name_pattern: str = r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$"
 
 path_dict: dict = {
     "pattern": path_pattern,
@@ -21,6 +22,7 @@ def operator_validator(value: str) -> str:
     Raises:
         - `ValueError`: If the string is not a valid operator.
     """
+
     if not Operators.is_valid_operator(value):
         raise ValueError(
             "\n    HyllaDB Error:\n"

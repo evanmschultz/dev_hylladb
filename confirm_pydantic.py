@@ -1,11 +1,11 @@
 from pydantic import ConfigDict
-
-from hylladb.db.models import ShelfModel
 from rich import print
+
+from hylladb.db.models import SchemaModel
 
 
 # Define the base class
-class Animal(ShelfModel):
+class Animal(SchemaModel):
     name: str
 
 
@@ -20,7 +20,7 @@ class Cat(Animal):
 
 
 # Define a class with a field that accepts instances of Animal or its subclasses
-class Zoo(ShelfModel):
+class Zoo(SchemaModel):
     # model_config = ConfigDict(extra="allow")
     animal: Animal  # Accepts instances of Animal or any subclass of Animal
 
@@ -66,24 +66,26 @@ print(zoo2)
 # schema: dict[str, Any] = extract_model_schema(MainModel)
 # print(schema)
 
-from glom import glom, Path, PathAccessError
-from typing import Any, get_type_hints, Type
-from hylladb.db.models import ShelfModel
+from typing import Any, Type, get_type_hints
+
+from glom import Path, PathAccessError, glom
+
+from hylladb.db.models import SchemaModel
 
 
-class NestedModel(ShelfModel):
+class NestedModel(SchemaModel):
     nested_field: int
 
 
-class MainModel(ShelfModel):
+class MainModel(SchemaModel):
     main_field: str
     nested_model: NestedModel
 
 
-def extract_model_schema(model_class: Type[ShelfModel]) -> dict[str, Any]:
+def extract_model_schema(model_class: Type[SchemaModel]) -> dict[str, Any]:
     schema: dict[str, Any] = {}
     for field_name, field_type in get_type_hints(model_class).items():
-        if issubclass(field_type, ShelfModel):
+        if issubclass(field_type, SchemaModel):
             schema[field_name] = extract_model_schema(field_type)
         else:
             schema[field_name] = field_type  # Store the actual type object
@@ -91,7 +93,7 @@ def extract_model_schema(model_class: Type[ShelfModel]) -> dict[str, Any]:
 
 
 def validate_value_with_schema(
-    model_class: Type[ShelfModel], path: str, value: Any
+    model_class: Type[SchemaModel], path: str, value: Any
 ) -> bool:
     schema = extract_model_schema(model_class)
     try:

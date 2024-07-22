@@ -15,11 +15,11 @@ from hylladb.hyql.hyql import (
     Condition,
     ConditionDict,
     Group,
-    HyQLBaseModel,
     Remove,
     Reset,
     Revise,
     SetSchema,
     SortItem,
+    Transaction,
     Write,
 )

@@ -1,11 +1,11 @@
 from rich import print
 
-from hylladb.db.models import ShelfModel
+from hylladb.db.models import SchemaModel
 from hylladb.hyql import BuildShelf, CheckOut, Operators, Remove, Revise, Write
-from hylladb.hyql.hyql import SetSchema
+from hylladb.hyql.hyql import SetSchema, Transaction
 
 
-class AnimalSchema(ShelfModel):
+class AnimalSchema(SchemaModel):
     name: str
 
 
@@ -49,7 +49,6 @@ checkout_idea: dict = {
                         "left": "name",
                         "operator": Operators.IN,
                         "right": "path1.field2",
-                        "left_is_path": False,
                         "right_is_path": True,
                     }
                 },
@@ -144,9 +143,24 @@ remove_idea: dict = {
     ],
 }
 
+
 print(SetSchema(**set_schema_idea))
 print(BuildShelf(**build_shelf_idea))
 print(CheckOut(**checkout_idea))
 print(Write(**write_idea))
 print(Revise(**revise_idea))
 print(Remove(**remove_idea))
+
+# Create a transaction with all the above queries
+transaction_idea = {
+    "queries": [
+        Write(**write_idea),
+        Remove(**remove_idea),
+        Revise(**revise_idea),
+        CheckOut(**checkout_idea),
+        BuildShelf(**build_shelf_idea),
+        SetSchema(**set_schema_idea),
+    ]
+}
+
+print(Transaction(**transaction_idea))
