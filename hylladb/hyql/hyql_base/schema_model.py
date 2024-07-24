@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class SchemaModel(BaseModel, validate_assignment=True):
+class SchemaModel(BaseModel):
     """
     A model for defining the schema allowed in a shelf.
 
@@ -24,4 +24,11 @@ class SchemaModel(BaseModel, validate_assignment=True):
     ```
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="forbid",
+        validate_assignment=True,
+        validate_default=True,
+        revalidate_instances="always",
+        strict=True,
+    )

@@ -39,9 +39,3 @@ This will result in at least O(n) lookup time. Due to how the nesting was struct
 ## Cautions:
 
 Do not add complex data types (eg. class instances, etc.) to this database if you did not create them, or do not trust the source as it suffers from all of the security issues of python's pickle module, namely potential of running malicious code on deserialization. We have optional sandboxing logic on the roadmap to mitigate this concern when allowing others to add to your database.
-
-<!-- Shelves are not relational, so you can't do joins or other relational operations. You can't do complex queries like you can with document databases. You can't do aggregations like you can with document databases. You can't do transactions like you can with relational databases. You can't do indexing like you can with relational databases. You can't do any of the things that make relational and document databases so powerful. But you can store complex data types and retrieve them quickly. -->
-
-```
-
-```

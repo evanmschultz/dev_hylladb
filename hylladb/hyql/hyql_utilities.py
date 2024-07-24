@@ -1,4 +1,4 @@
-from hylladb.hyql.enums import Operators
+from hylladb.hyql.constants.enums import Operators
 
 path_pattern: str = r"^[A-Za-z0-9]+(?:[._][A-Za-z0-9]+)*$"
 name_pattern: str = r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$"

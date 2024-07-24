@@ -25,8 +25,8 @@ def test_condition_valid() -> None:
     Test creating a valid Condition model.
     Ensures that a Condition object with valid inputs is created successfully.
     """
-    condition = Condition(left="path1.field1", operator=">", right=100)
-    assert condition.left == "path1.field1"
+    condition = Condition(left_path="path1.field1", operator=">", right=100)
+    assert condition.left_path == "path1.field1"
     assert condition.operator == ">"
     assert condition.right == 100
 
@@ -37,7 +37,7 @@ def test_condition_invalid_operator() -> None:
     Ensures that a ValidationError is raised for an invalid operator.
     """
     with pytest.raises(ValueError):
-        Condition(left="path1.field1", operator="invalid", right=100)
+        Condition(left_path="path1.field1", operator="invalid", right=100)
 
 
 def test_condition_invalid_left_path() -> None:
@@ -46,7 +46,7 @@ def test_condition_invalid_left_path() -> None:
     Ensures that a ValidationError is raised for an invalid left path string.
     """
     with pytest.raises(ValidationError):
-        Condition(left="invalid path", operator=">", right=100)
+        Condition(left_path="invalid path", operator=">", right=100)
 
 
 def test_condition_invalid_right_path() -> None:
@@ -56,7 +56,10 @@ def test_condition_invalid_right_path() -> None:
     """
     with pytest.raises(ValidationError):
         Condition(
-            left="path1.field1", operator=">", right="invalid path", right_is_path=True
+            left_path="path1.field1",
+            operator=">",
+            right="invalid path",
+            right_is_path=True,
         )
 
 
@@ -66,7 +69,7 @@ def test_condition_dict_valid() -> None:
     Test creating a valid ConditionDict model.
     Ensures that a ConditionDict object with a valid Condition is created successfully.
     """
-    condition = Condition(left="path1.field1", operator=">", right=100)
+    condition = Condition(left_path="path1.field1", operator=">", right=100)
     condition_dict = ConditionDict(condition=condition)
     assert condition_dict.condition == condition
 
@@ -78,10 +81,10 @@ def test_group_valid() -> None:
     Ensures that a Group object with valid conditions and operators is created successfully.
     """
     condition1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     condition2 = ConditionDict(
-        condition=Condition(left="path2.field2", operator="<", right=200)
+        condition=Condition(left_path="path2.field2", operator="<", right=200)
     )
     group = Group(group=[condition1, "OR", condition2])
     assert group.group == [condition1, "OR", condition2]
@@ -111,7 +114,7 @@ def test_group_invalid_operator() -> None:
     Ensures that a ValidationError is raised for an invalid logical operator in the group list.
     """
     condition1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     with pytest.raises(ValidationError):
         Group(group=[condition1, "INVALID_OPERATOR"])
@@ -123,7 +126,7 @@ def test_group_consecutive_operators() -> None:
     Ensures that a ValidationError is raised for consecutive logical operators in the group list.
     """
     condition1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     with pytest.raises(ValidationError):
         Group(group=[condition1, "AND", "OR"])
@@ -191,7 +194,7 @@ def test_checkout_valid_filters_with_condition_dict() -> None:
     Ensures that a CheckOut object with valid ConditionDict filters is created successfully.
     """
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     checkout_item = CheckOutItem(
         path="section_1.sub_section_1", checkout=["shelf_1.field1"]
@@ -208,10 +211,10 @@ def test_checkout_valid_filters_with_group() -> None:
     Ensures that a CheckOut object with valid Group filters is created successfully.
     """
     condition_dict1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     condition_dict2 = ConditionDict(
-        condition=Condition(left="path2.field2", operator="<", right=200)
+        condition=Condition(left_path="path2.field2", operator="<", right=200)
     )
     group = Group(group=[condition_dict1, "OR", condition_dict2])
     checkout_item = CheckOutItem(
@@ -332,7 +335,7 @@ def test_revise_valid_filters_with_condition_dict() -> None:
     Ensures that a Revise object with valid ConditionDict filters is created successfully.
     """
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     revise = Revise(
         path="section_1.shelf_1", filters=[condition_dict], data={"field1": "value1"}
@@ -346,10 +349,10 @@ def test_revise_valid_filters_with_group() -> None:
     Ensures that a Revise object with valid Group filters is created successfully.
     """
     condition_dict1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     condition_dict2 = ConditionDict(
-        condition=Condition(left="path2.field2", operator="<", right=200)
+        condition=Condition(left_path="path2.field2", operator="<", right=200)
     )
     group = Group(group=[condition_dict1, "OR", condition_dict2])
     revise = Revise(
@@ -387,7 +390,7 @@ def test_remove_valid_filters_with_condition_dict() -> None:
     Ensures that a Remove object with valid ConditionDict filters is created successfully.
     """
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     remove = Remove(
         path="section_1.shelf_1", filters=[condition_dict], remove_shelf=True
@@ -401,10 +404,10 @@ def test_remove_valid_filters_with_group() -> None:
     Ensures that a Remove object with valid Group filters is created successfully.
     """
     condition_dict1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     condition_dict2 = ConditionDict(
-        condition=Condition(left="path2.field2", operator="<", right=200)
+        condition=Condition(left_path="path2.field2", operator="<", right=200)
     )
     group = Group(group=[condition_dict1, "OR", condition_dict2])
     remove = Remove(path="section_1.shelf_1", filters=[group], remove_shelf=True)
@@ -446,7 +449,7 @@ def test_reset_valid_filters_with_condition_dict() -> None:
     Ensures that a Reset object with valid ConditionDict filters is created successfully.
     """
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     reset = Reset(path="section_1.shelf_1", filters=[condition_dict], reset_shelf=True)
     assert reset.filters == [condition_dict]
@@ -458,10 +461,10 @@ def test_reset_valid_filters_with_group() -> None:
     Ensures that a Reset object with valid Group filters is created successfully.
     """
     condition_dict1 = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     condition_dict2 = ConditionDict(
-        condition=Condition(left="path2.field2", operator="<", right=200)
+        condition=Condition(left_path="path2.field2", operator="<", right=200)
     )
     group = Group(group=[condition_dict1, "OR", condition_dict2])
     reset = Reset(path="section_1.shelf_1", filters=[group], reset_shelf=True)

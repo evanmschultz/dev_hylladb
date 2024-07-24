@@ -3,11 +3,14 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any, Literal, LiteralString, Type, Union
 
+from pydantic import ValidationError
+
 if TYPE_CHECKING:
     from hylladb.hyql.hyql import ConditionDict, Group
 
+from hylladb.hyql.hyql_base.schema_model import SchemaModel
 import hylladb.hyql.hyql_utilities as hyql_utils
-from hylladb.hyql.enums import Operators
+from hylladb.hyql.constants.enums import Operators
 
 
 def validate_group_format(
@@ -95,19 +98,10 @@ def validate_operator(value: str) -> str:
     return value
 
 
-def validate_paths(data: Any) -> None:
-    """Validates the paths."""
+def validate_right_is_path(data: Any) -> Any:
+    """Validates the the `right` attribute is a path if `right_is_path` is True."""
     pattern: LiteralString = hyql_utils.path_dict["pattern"]
 
-    if not isinstance(getattr(data, "left"), str) or not re.match(
-        pattern, str(getattr(data, "left"))
-    ):
-        raise ValueError(
-            "\n    HyllaDB Error:\n"
-            "        ---->"
-            "The `left` value must be a valid path string for HyllaDB."
-            " Example format: 'section.shelf.dict_key'.\n"
-        )
     if getattr(data, "right_is_path"):
         if not isinstance(getattr(data, "right"), str) or not re.match(
             pattern, str(getattr(data, "right"))
@@ -118,6 +112,13 @@ def validate_paths(data: Any) -> None:
                 "When the `right_is_path` flag is set to True, the `right` value must be a valid path string for HyllaDB."
                 " Example format: 'section.shelf.dict_key'.\n"
             )
+    return data
+
+
+def validate_is_schema_model(data: Any) -> Any:
+    if not issubclass(data.__class__, SchemaModel):
+        raise ValidationError("\n   HyllaDB Error:\n" "        ---->")
+
     return data
 
 

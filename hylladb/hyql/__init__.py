@@ -1,4 +1,4 @@
-from hylladb.hyql.enums import (
+from hylladb.hyql.constants.enums import (
     BasicComparisonOperators,
     CollectionOperators,
     DateTimeOperators,
@@ -11,7 +11,7 @@ from hylladb.hyql.enums import (
 from hylladb.hyql.hyql import (
     BuildShelf,
     CheckOut,
-    CheckOutItem,
+    # CheckOutItem,
     Condition,
     ConditionDict,
     Group,

@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from hylladb.hyql.enums import Operators
+from hylladb.hyql.constants.enums import Operators
 from hylladb.hyql.hyql import Condition, ConditionDict, Group
 from hylladb.hyql.validators import (
     ensure_path_is_none_if_is_library,
@@ -12,7 +12,7 @@ from hylladb.hyql.validators import (
     validate_group_format,
     validate_only_one_bool_is_true,
     validate_operator,
-    validate_paths,
+    validate_right_is_path,
 )
 
 
@@ -20,7 +20,7 @@ from hylladb.hyql.validators import (
 def test_validate_group_format_valid() -> None:
     """Test validate_group_format with valid input."""
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     group = Group(group=[condition_dict, "OR", condition_dict])
     result = validate_group_format(
@@ -32,7 +32,7 @@ def test_validate_group_format_valid() -> None:
 def test_validate_group_format_invalid_operator() -> None:
     """Test validate_group_format with invalid operator."""
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     with pytest.raises(ValueError):
         validate_group_format(
@@ -43,7 +43,7 @@ def test_validate_group_format_invalid_operator() -> None:
 def test_validate_group_format_consecutive_operators() -> None:
     """Test validate_group_format with consecutive operators."""
     condition_dict = ConditionDict(
-        condition=Condition(left="path1.field1", operator=">", right=100)
+        condition=Condition(left_path="path1.field1", operator=">", right=100)
     )
     with pytest.raises(ValueError):
         validate_group_format([condition_dict, "AND", "OR"], [ConditionDict, Group])
@@ -84,12 +84,12 @@ def test_validate_operator_all_valid_operators() -> None:
 def test_validate_paths_valid() -> None:
     """Test validate_paths with valid paths."""
     condition = Condition(
-        left="section.shelf.dict_key",
+        left_path="section.shelf.dict_key",
         operator=">",
         right="section.shelf.dict_key",
         right_is_path=True,
     )
-    assert validate_paths(condition) == condition
+    assert validate_right_is_path(condition) == condition
 
 
 # validate_checkout_format Tests

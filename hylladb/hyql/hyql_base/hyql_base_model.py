@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class HyQLBaseModel(BaseModel, validate_assignment=True):
+class HyQLBaseModel(BaseModel):
     """
     A base model for HyQL models.
 
@@ -9,4 +9,11 @@ class HyQLBaseModel(BaseModel, validate_assignment=True):
     an invalid field is passed to the model.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="forbid",
+        validate_assignment=True,
+        validate_default=True,
+        revalidate_instances="always",
+        strict=True,
+    )

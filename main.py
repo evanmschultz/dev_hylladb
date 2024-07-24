@@ -1,148 +1,125 @@
 from rich import print
-
+from hylladb.hyql import (
+    BuildShelf,
+    CheckOut,
+    Operators,
+    Remove,
+    Revise,
+    Write,
+    SetSchema,
+    Transaction,
+    Condition,
+    ConditionDict,
+    Group,
+    SortItem,
+)
 from hylladb.hyql.hyql_base.schema_model import SchemaModel
-from hylladb.hyql import BuildShelf, CheckOut, Operators, Remove, Revise, Write
-from hylladb.hyql.hyql import SetSchema, Transaction
 
 
 class AnimalSchema(SchemaModel):
     name: str
 
 
-set_schema_idea: dict = {
+set_schema_idea = {
     "path": "path1.sub_path1",
     "schema_model": AnimalSchema,
 }
 
-
-build_shelf_idea: dict = {
+build_shelf_idea = {
     "path": "path1.sub_path1",
     "name": "name1",
-    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
+    "data": AnimalSchema(name="value1"),
 }
 
+build_section_idea = {
+    "path": "section_1.sub_section_1",
+    "name": "name1",
+    "schema_model": AnimalSchema,
+}
 
-checkout_idea: dict = {
-    "checkout": [
-        {
-            "path": "section_1.sub_section_1",
-            "checkout": ["shelf_1.field1", "shelf_1.field2"],
-        },
-        {
-            "path": "section_2",
-            "checkout": ["*all"],
-        },
-    ],
+checkout_idea = {
+    "path": "section_1.sub_section_1",
+    "checkout": ["shelf_1.field1", "shelf_1.field2"],
     "filters": [
-        {
-            "condition": {
-                "left": "path1.field1",
-                "operator": ">=",
-                "right": 1,
-            }
-        },
+        ConditionDict(
+            condition=Condition(
+                left_path="path1.field1",
+                operator=">=",
+                right=1,
+            )
+        ),
         "AND",
-        {
-            "group": [
-                {
-                    "condition": {
-                        "left": "name",
-                        "operator": Operators.IN,
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
+        Group(
+            group=[
+                ConditionDict(
+                    condition=Condition(
+                        left_path="name",
+                        operator=Operators.IN,
+                        right="path1.field2",
+                        right_is_path=True,
+                    )
+                ),
                 "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
+                ConditionDict(
+                    condition=Condition(
+                        left_path="path2.field3",
+                        operator="<",
+                        right="path1.field2",
+                        right_is_path=True,
+                    )
+                ),
             ]
-        },
+        ),
     ],
-    "sort": [{"path": "path1.field1"}],
+    "sort": [SortItem(path="path1.field1", order="asc")],
     "limit": 10,
     "offset": 0,
 }
 
-write_idea: dict = {
+write_idea = {
     "path": "path1.sub_path1",
-    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
+    "data": AnimalSchema(name="value1"),
 }
 
-revise_idea: dict = {
+revise_idea = {
     "path": "path1.sub_path1",
-    "filters": [
-        {
-            "condition": {
-                "left": "path1.field1",
-                "operator": "==",
-                "right": "value1",
-            }
-        },
-        "AND",
-        {
-            "group": [
-                {
-                    "condition": {
-                        "left": "path1.field2",
-                        "operator": ">",
-                        "right": 100,
-                    }
-                },
-                "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
-            ]
-        },
-    ],
-    "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
+    "data": AnimalSchema(name="new_value1"),
 }
 
-remove_idea: dict = {
+
+remove_idea = {
     "path": "path1.sub_path1",
     "filters": [
-        {
-            "condition": {
-                "left": "path1.field1",
-                "operator": "==",
-                "right": "value1",
-            }
-        },
+        ConditionDict(
+            condition=Condition(
+                left_path="path1.field1",
+                operator="==",
+                right="value1",
+            )
+        ),
         "AND",
-        {
-            "group": [
-                {
-                    "condition": {
-                        "left": "path1.field2",
-                        "operator": ">",
-                        "right": 100,
-                    }
-                },
+        Group(
+            group=[
+                ConditionDict(
+                    condition=Condition(
+                        left_path="path1.field2",
+                        operator=">",
+                        right=100,
+                    )
+                ),
                 "OR",
-                {
-                    "condition": {
-                        "left": "path2.field3",
-                        "operator": "<",
-                        "right": "path1.field2",
-                        "right_is_path": True,
-                    }
-                },
+                ConditionDict(
+                    condition=Condition(
+                        left_path="path2.field3",
+                        operator="<",
+                        right="path1.field2",
+                        right_is_path=True,
+                    )
+                ),
             ]
-        },
+        ),
     ],
 }
-
 
 print(SetSchema(**set_schema_idea))
 print(BuildShelf(**build_shelf_idea))

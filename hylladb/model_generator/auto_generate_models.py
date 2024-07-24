@@ -39,14 +39,14 @@ class HyllaBaseModel(BaseModel):
 class User(BaseModel):
     id: UUID = Field(default_factory=lambda: uuid4(), description="Unique identifier")
     name: str
-    email: str
+    email: str = "123"
     age: HyllaBaseModel
 
 
 # Function to create subset models for each combination of fields
 def _create_subset_models(model: type[BaseModel]) -> list[type[BaseModel]]:
-    if "id" not in model.__annotations__:
-        raise ValueError(f"The model {model.__name__} is missing an 'id' field.")
+    # if "id" not in model.__annotations__:
+    #     raise ValueError(f"The model {model.__name__} is missing an 'id' field.")
 
     field_names = list(model.__annotations__.keys())
     subset_models: list[type[BaseModel]] = []

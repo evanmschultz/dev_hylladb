@@ -1,11 +1,18 @@
 from typing import Any, Literal, Union
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
-import hylladb.hyql.hyql_utilities as hyql_utils
 import hylladb.hyql.validators as validators
 from hylladb.hyql.hyql_base.hyql_base_model import HyQLBaseModel
 from hylladb.hyql.hyql_base.schema_model import SchemaModel
+from hylladb.hyql.hyql_utilities import name_pattern, path_dict
 
 
 class Condition(HyQLBaseModel):
@@ -18,7 +25,8 @@ class Condition(HyQLBaseModel):
     The purpose of this model is to provide a way to define a single condition in a query, which can then be used in a group or filter expression.
 
     Attributes:
-        - `left` (str): The left operand of the condition, which must be a path to a dictionary key, shelf, or section.
+        - `left_path` (str): The path to the shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1`.
         - `operator` (str): The operator used to compare the left and right operands.
         - `right` (Any): The right operand of the condition, which can be a value or a path to a dictionary key, shelf, or section.
         - `right_is_path` (bool): A flag that indicates if the right operand is a path to a dictionary key, shelf, or section. Defaults to `False`.
@@ -47,7 +55,7 @@ class Condition(HyQLBaseModel):
         ```
     """
 
-    left: str
+    left_path: str = Field(**path_dict)
     operator: str
     right: Any
     right_is_path: bool = False
@@ -60,12 +68,9 @@ class Condition(HyQLBaseModel):
 
     @model_validator(mode="after")
     def _validate_paths(cls, data) -> Any:
-        """
-        Validates the paths. The `left` must be a valid path string and the `right` must be a valid path string
-        if `right_is_path` is True.
-        """
+        """Validates the the `right` attribute is a path if `right_is_path` is True."""
 
-        return validators.validate_paths(data)
+        return validators.validate_right_is_path(data)
 
 
 class ConditionDict(HyQLBaseModel):
@@ -151,53 +156,6 @@ class Group(HyQLBaseModel):
         return validators.validate_group_format(value, [ConditionDict, Group])
 
 
-class CheckOutItem(HyQLBaseModel):
-    """
-    A model for a single checkout item in a HyQL query.
-
-    The purpose of this model is to provide a way to define a single checkout item in a query, which can then be used in a checkout query.
-
-    Attributes:
-        - `path` (str | None): The path to the shelf, or section. Must be a dot separated path string from the library directory,
-            eg. `section.shelf_1`.
-            - If `None`, checkout is for the library directory.
-        - `checkout` (list[str] | list[Literal['*all']]): A list of paths, keys, sections, or shelves to be checked out.
-
-
-    Raises:
-        - `ValueError`: If `checkout` is not a list.
-        - `ValueError`: If `checkout` is an empty list.
-        - `ValueError`: If `checkout` contains an item that is not a string.
-        - `ValueError`: If `checkout` contains an item that is not a valid path string.
-        - `ValueError`: If `checkout` contains more than one item and one of the items is '*all'.
-
-    Examples:
-        ```Python
-        # Example checkout query. Can be done by instantiating the model directly or
-        # by unpacking a dict to the model.
-        checkout_item: dict = {
-                "path": "section_1.sub_section_1",
-                "checkout": ["shelf_1.field1", "shelf_1.field2"],
-            },
-
-        # Instantiate the model by unpacking the dict.
-        checkout = Checkout(**checkout_item)
-        ```
-    """
-
-    path: str | None = Field(**hyql_utils.path_dict)
-    checkout: list[str] | list[Literal["*all"]] = Field(
-        ["*all"],
-        description="A list of keys to be checked out. If the list contains only '*all', all keys will be checked out.",
-    )
-
-    @field_validator("checkout")
-    def _validate_checkout_format(cls, value: list[str]) -> list[str]:
-        """Validates the format of the checkout list."""
-
-        return validators.validate_checkout_format(value)
-
-
 class SortItem(HyQLBaseModel):
     """
     A model for a single sort item in a HyQL query.
@@ -235,7 +193,7 @@ class SortItem(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
+    path: str = Field(**path_dict)
     order: str = Field("asc", pattern=r"^(asc|desc)$")
 
 
@@ -310,7 +268,7 @@ class SetSchema(HyQLBaseModel):
         ```
     """
 
-    path: str | None = Field(default=None, **hyql_utils.path_dict)
+    path: str | None = Field(default=None, **path_dict)
     schema_model: type[SchemaModel] = Field(
         ..., description="The schema for the section or library."
     )
@@ -323,7 +281,7 @@ class SetSchema(HyQLBaseModel):
         validators.ensure_path_is_none_if_is_library(data)
 
 
-class BuildShelf(HyQLBaseModel):
+class BuildShelf(BaseModel):
     """
     A HyQL model used when building a shelf in HyllaDB.
 
@@ -336,31 +294,46 @@ class BuildShelf(HyQLBaseModel):
         - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
         - `name` (str): The name of the shelf. Must follow the same naming conventions as a Python variable name, eg. `shelf_1`.
-        - `data` (dict[str, Any] | None): The data to be written to the path. If passing in data must conform to the `schema_model` defined in the section.
+        - `data` (SchemaModel | None): The data to be written to the path.
+            - If passing in data you must use a `SchemaModel` instance as defined by the
+                `SchemaModel` class for the respective library or section the shelf is a direct child of.
+
         - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
 
     Examples:
-        ```Python
-        from hylladb.hyql import BuildShelf
+        ```python
+        from hylladb.hyql import BuildShelf, SchemaModel
 
-        # Example build query. Can be done by instantiating the model directly or
-        # by unpacking a dict to the model.
-        hylladb_build: dict = {
-            "path": "path1.sub_path1",
-            "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
-        }
+        class BookSchema(SchemaModel):
+            title: str
+            Author: str
+            published_year: int
 
-        # Instantiate the model by unpacking the dict.
-        build = BuildShelf(**hylladb_build)
+        data = BookSchema(
+            title="Dune",
+            author="Frank Herbert",
+            published_year=1965
+        )
 
-        # Pass it into the HyQL query method.
+        build_shelf = BuildShelf(
+            path="library.books",
+            name="sci_fi",
+            data=data,
+            metadata={"genre": "Science Fiction"}
+        )
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
-    name: str = Field(pattern=r"^[A-Za-z0-9]+(?:[_][A-Za-z0-9]+)*$")
-    data: dict[str, Any] | None = None
+    path: str = Field(**path_dict)
+    name: str = Field(pattern=name_pattern)
+    data: Any | None = None  # Must be a subclass of SchemaModel
     metadata: dict[str, Any] | None = None
+
+    @field_validator("data")
+    def validate_is_schema_model(cls, data) -> Any:
+        """Validates that the data is a SchemaModel instance."""
+
+        return validators.validate_is_schema_model(data)
 
 
 class BuildSection(HyQLBaseModel):
@@ -376,39 +349,58 @@ class BuildSection(HyQLBaseModel):
         - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
             eg. `section.shelf_1.key_1`.
         - `name` (str): The name of the section. Must follow the same naming conventions as a Python variable name, eg. `section_1`.
-        - `schema_model` (SchemaModel | None): The schema for the section. Used to enforce data structure and types for all the `shelves` that are direct children
+        - `schema_model` (type[SchemaModel]): The schema for the section. Used to enforce data structure and types for all the `shelves` that are direct children
             of the section. If `None`, no shelf can be created as a direct child of the section.
         - `metadata` (dict[str, Any] | None): The metadata to be written to the path.
     """
 
-    path: str = Field(**hyql_utils.path_dict)
-    name: str = Field(pattern=hyql_utils.name_pattern)
-    schema_model: SchemaModel | None
+    path: str = Field(**path_dict)
+    name: str = Field(pattern=name_pattern)
+    schema_model: type[SchemaModel]
     metadata: dict[str, Any] | None = None
 
 
 class Write(HyQLBaseModel):
     """
-    A model for a single write or upsert item in a HyQL query.
+    A model for inserting new data in a HyQL query.
 
-    This query model is used to write or upsert data to an existing shelf in the database. It is used to update the data in a shelf, add new data to a shelf, or insert the data if it does not already exist. In SQL it would be similar to an `UPDATE`, `INSERT`, or `UPSERT` query.
+    This query model is used to write new data to a specified path in the database. It is specifically designed for adding new
+    data and does not update or overwrite existing data. In SQL, it would be similar to an INSERT operation. In MongoDB, it's
+    comparable to the insertOne() method. In key-value stores, it's similar to a PUT operation for adding a new key-value pair,
+    but unlike typical PUT operations, it won't update existing data.
 
-    The purpose of this model is to provide a way to define a single write or upsert item in a query, which can then be used in a write query.
+    The purpose of this model is to provide a way to define a single write operation in a query, which can then be used to add
+    new data to the database.
 
     Attributes:
-        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
-            eg. `section.shelf_1.key_1`.
-        - `data` (dict[str, Any]): The data to be written or upserted to the path.
+        - `path` (str): The path to the dictionary key, shelf, or section where the new data will be inserted. Must be a
+            dot-separated path string from the library directory, e.g., "section.shelf_1.key_1".
+        - `data` (SchemaModel): The new data to be written to the specified path.
+
+    Notes:
+        - The `data` attribute requires a SchemaModel. This approach ensures type safety by enforcing that all data conforms
+          to a predefined schema, reducing runtime errors and enhancing IDE suggestions.
+        - This class is designed to prevent accidental overwrites of existing data. If you need to update existing data,
+          use a separate update operation.
 
     Examples:
         ```Python
-        from hylladb.hyql import Write
+        from hylladb.hyql import Write, SchemaModel
 
-        # Example write or upsert query. Can be done by instantiating the model directly or
+        # Define the schema for the shelves that are direct children to the section.
+        class Book(SchemaModel):
+            id: int
+            title: str
+            author: str
+            genre: str
+
+        new_book = Book(id=1, title="The Great Gatsby", author="F. Scott Fitzgerald", genre="Fiction")
+
+        # Example write query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
         hylladb_write: dict = {
-            "path": "path1.sub_path1",
-            "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
+            "path": "library.fiction.classics",
+            "data": new_book,
         }
 
         # Instantiate the model by unpacking the dict.
@@ -418,19 +410,32 @@ class Write(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
-    data: dict[str, Any]
+    path: str = Field(**path_dict)
+    data: Any  # Must be a subclass of SchemaModel
+
+    @field_validator("data")
+    def validate_is_schema_model(cls, data) -> Any:
+        """Validates that the data is a SchemaModel instance."""
+
+        return validators.validate_is_schema_model(data)
 
 
 class CheckOut(HyQLBaseModel):
     """
     A model for a checkout query in HyQL.
 
-    This model helps you retrieve specific data from the database. It allows you to specify the paths to the shelves, sections, or library you want to retrieve
-    data from, as well as any filters, sorting, and limits you want to apply to the results.
+    This model helps you retrieve data from specific shelves in the database (library). It allows you to specify the paths to the shelves, sections, or library
+    you want to retrieve data from, as well as any filters, sorting, and limits you want to apply to the results.
 
     Attributes:
-        - `checkout` (list[CheckOutItem]): A list of checkout items.
+        - `path` (str | None): The path to the shelf, or section. Must be a dot separated path string from the library directory,
+            eg. `section.shelf_1`.
+            - If `None`, checkout is for the library directory.
+            - If providing shelf names as the final part of the path, those shelves will be checked out, assuming they exist and pass the filter data.
+        -   `checkout` (list[str | Literal["*all"]]): A list of shelf names to be checked out.
+            -   If the list contains only '*all', all shelves will be checked out that match the filter data.
+            -   If wishing to checkout specific shelves, provide a list of the shelf names you wish to checkout, or leave the default value of
+                `["*all"]` to checkout all shelves that fit the filter data.
         - `filters` (list[ConditionDict | Group | str] | None): A list of conditions, groups, or logical operators.
         - `sort` (list[SortItem] | None): A list of sort items.
         - `limit` (int | None): The maximum number of results to return.
@@ -448,16 +453,8 @@ class CheckOut(HyQLBaseModel):
         # Example checkout query. Can be done by instantiating the model directly or
         # by unpacking a dict to the model.
         hylladb_checkout: dict = {
-        "checkout": [
-            {
-                "path": "section_1.sub_section_1",
-                "checkout": ["shelf_1.field1", "shelf_1.field2"],
-            },
-            {
-                "path": "section_2",
-                "checkout": ["*all"],
-            },
-        ],
+        "path": "section_1.sub_section_1",
+        "checkout": ["shelf_1", "shelf_1.field2"],
         "filters": [
             {
                 "condition": {
@@ -496,92 +493,84 @@ class CheckOut(HyQLBaseModel):
     }
 
     # Instantiate the model by unpacking the dict.
-    checkout = Checkout(**hylladb_checkout)
+    checkout = CheckOut(**hylladb_checkout)
     ```
     """
 
-    checkout: list[CheckOutItem]
-    filters: list[ConditionDict | Group | str] | None = None
-    sort: list[SortItem] | None = None
+    path: str | None = Field(None, **path_dict)
+    checkout: list[str | Literal["*all"]] = Field(
+        ["*all"],
+        description="A list of shelf names to be checked out. If the list contains only '*all', all shelves will be checked out.",
+    )
+    filters: list[Union["ConditionDict", "Group", str]] | None = None
+    sort: list["SortItem"] | None = None
     limit: int | None = Field(None, ge=1)
     offset: int | None = Field(None, ge=0)
-
-    @field_validator("filters")
-    def _validate_filters_format(cls, value) -> list[Union[ConditionDict, Group, str]]:
-        """Validates the format of the filters list."""
-
-        return validators.validate_group_format(value, [ConditionDict, Group])
 
 
 class Revise(HyQLBaseModel):
     """
     A model for a revise query in HyQL.
 
-    This model is used to update the data in a shelf, or to add new data to a shelf. It is similar to the `Write` model, but allows you to specify
-    conditions that must be met before the data is written. In SQL it would be similar to an `UPDATE` or `INSERT` query with a `WHERE` clause.
+    This model is used to update existing data in a shelf. It allows you to specify conditions that must be met before the data is written.
+    In SQL, it would be similar to an UPDATE query.
 
     Attributes:
-        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the library directory,
-            eg. `section.shelf_1.key_1`.
-        - `filters` (list[ConditionDict | Group | str]): A list of conditions, groups, or logical operators.
-        - `data` (dict[str, Any]): The data to be written to the path.
+        - `path` (str): The path to the dictionary key, shelf, or section. Must be a dot separated path string from the
+            library directory, e.g., `section.shelf_1.key_1`.
+        - `data` (SchemaModel): The data to be written or updated at the path. Must conform to the `schema_model` defined
+            in the section.
+
+    Notes:
+        - The `data` attribute requires a SchemaModel. This approach ensures type safety by enforcing that all data
+          conforms to a predefined schema, reducing runtime errors and enhancing IDE suggestions.
 
     Examples:
         ```Python
-        # Import the Operators Enum if you want to use the enum values instead of strings as a guide.
-        from hylladb.hyql import Operators
+        from hylladb import HyllaDB
+        from hylladb.hyql import Operators, Revise, CheckOut, Condition, ConditionDict, Group, SortItem
+        from hylladb.hyql.hyql_base.schema_model import SchemaModel
 
-        # Example revise query. Can be done by instantiating the model directly or
-        # by unpacking a dict to the model.
-        hylladb_revise: dict = {
-            "path": "path1.sub_path1",
-            "filters": [
-                {
-                    "condition": {
-                        "left": "path1.field1",
-                        "operator": "==",
-                        "right": "value1",
-                    }
-                },
-                "AND",
-                {
-                    "group": [
-                        {
-                            "condition": {
-                                "left": "path1.field2",
-                                "operator": ">",
-                                "right": 100,
-                            }
-                        },
-                        "OR",
-                        {
-                            "condition": {
-                                "left": "path2.field3",
-                                "operator": "<",
-                                "right": "path1.field2",
-                                "right_is_path": True,
-                            }
-                        },
-                    ]
-                },
-            ],
-            "data": {"sub_path1.field1": "value1", "sub_path1.field2": "value2"},
-        }
+        hylladb = HyllaDB()
 
-        # Instantiate the model by unpacking the dict.
-        revise = Revise(**hylladb_revise)
+        # User Schema previously defined.
+        # class UserData(SchemaModel):
+        #     field1: str
+        #     field2: str
+
+        # Define the condition for checking out user data.
+        condition = Condition(
+            left_path="section_1.sub_section_1.shelf_1.field1",
+            operator="=",
+            right="old_value1",
+        )
+        condition_dict = ConditionDict(condition=condition)
+
+        # Example checkout query to get user data.
+        checkout_query = CheckOut(
+            path="section_1.sub_section_1",
+            checkout=["shelf_1.field1", "shelf_1.field2"],
+            filters=[condition_dict],
+            sort=[SortItem(path="section_1.field1")],
+            limit=1,
+            offset=0
+        )
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
-    filters: list[ConditionDict | Group | str] | None = None
-    data: dict[str, Any]
+    path: str = Field(**path_dict)
+    data: Any  # Must be a subclass of SchemaModel
 
-    @field_validator("filters")
-    def _validate_filters_format(cls, value) -> list[Union[ConditionDict, Group, str]]:
-        """Validates the format of the filters list."""
+    @field_validator("data", mode="before")
+    def validate_is_schema_model(cls, data) -> Any:
+        """Validates that the data is a SchemaModel instance."""
 
-        return validators.validate_group_format(value, [ConditionDict, Group])
+        return validators.validate_is_schema_model(data)
+
+    # @field_validator("filters")
+    # def _validate_filters_format(cls, value) -> list[Union[ConditionDict, Group, str]]:
+    #     """Validates the format of the filters list."""
+    #     return validators.validate_group_format(value, [ConditionDict, Group])
 
 
 class Remove(HyQLBaseModel):
@@ -645,7 +634,7 @@ class Remove(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
+    path: str = Field(**path_dict)
     filters: list[ConditionDict | Group | str] | None = None
     remove_shelf: bool = False
     remove_section: bool = False
@@ -708,7 +697,7 @@ class Reset(HyQLBaseModel):
         ```
     """
 
-    path: str = Field(**hyql_utils.path_dict)
+    path: str = Field(**path_dict)
     filters: list[ConditionDict | Group | str] | None = None
     reset_shelf: bool = False
     reset_section: bool = False
